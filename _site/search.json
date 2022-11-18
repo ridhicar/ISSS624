@@ -95,6 +95,13 @@
     "href": "Hands-on_Ex1/Hands-on_Ex1.html#choropleth-mapping-geospatial-data-using-tmap",
     "title": "Hands-on Exercise 1: Geospatial Data Wrangling with R",
     "section": "Choropleth Mapping Geospatial Data Using tmap",
-    "text": "Choropleth Mapping Geospatial Data Using tmap"
+    "text": "Choropleth Mapping Geospatial Data Using tmap\n\nPlotting a choropleth map quickly by using qtm()\n\ntmap_mode(\"plot\")\n\ntmap mode set to plotting\n\nqtm(mpsz_pop2020, \n    fill = \"DEPENDENCY\")"
+  },
+  {
+    "objectID": "Hands-on_Ex1/Hands-on_Ex1.html#creating-a-choropleth-map-by-using-tmaps-elements",
+    "href": "Hands-on_Ex1/Hands-on_Ex1.html#creating-a-choropleth-map-by-using-tmaps-elements",
+    "title": "Hands-on Exercise 1: Geospatial Data Wrangling with R",
+    "section": "Creating a choropleth map by using tmap's elements",
+    "text": "Creating a choropleth map by using tmap's elements\n\ntm_shape(mpsz_pop2020)+\n  tm_fill(\"DEPENDENCY\", \n          style = \"quantile\", \n          palette = \"Blues\",\n          title = \"Dependency ratio\") +\n  tm_layout(main.title = \"Distribution of Dependency Ratio by planning subzone\",\n            main.title.position = \"center\",\n            main.title.size = 1.2,\n            legend.height = 0.40, \n            legend.width = 0.35,\n            frame = TRUE) +\n  tm_borders(alpha = 0.5) +\n  tm_compass(type=\"8star\", size = 1) +\n  tm_scale_bar() +\n  tm_grid(alpha =0.5) +\n  tm_credits(\"Source: Planning Sub-zone boundary from Urban Redevelopment Authorithy (URA)\\n and Population data from Department of Statistics DOS\", \n             position = c(\"left\", \"bottom\"))\n\n\n\n\n\nDrawing a base map\n\n# tm_shape() is used to define the input data (i.e mpsz_pop2020) and tm_polygons() is used to draw the planning subzone polygons\ntm_shape(mpsz_pop2020) +\n  tm_polygons()\n\n\n\n\n\n\nDrawing a choropleth map using tm_polygons()\n\ntm_shape(mpsz_pop2020)+\n  tm_polygons(\"DEPENDENCY\")\n\n\n\n\n\n\nDrawing a choropleth map using tm_fill() and *tm_border()**\n\ntm_shape(mpsz_pop2020)+\n  tm_fill(\"DEPENDENCY\")\n\n\n\n\n\ntm_shape(mpsz_pop2020)+\n  tm_fill(\"DEPENDENCY\") +\n  tm_borders(lwd = 0.1,  alpha = 1)\n\n\n\n\n\n\nData classification methods of tmap"
   }
 ]

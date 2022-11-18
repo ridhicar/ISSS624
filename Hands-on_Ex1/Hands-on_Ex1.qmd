@@ -297,3 +297,65 @@ write_rds(mpsz_pop2020, "data/rds/mpszpop2020.rds")
 ```
 
 ## Choropleth Mapping Geospatial Data Using *tmap*
+
+### Plotting a choropleth map quickly by using *qtm()*
+
+```{r}
+tmap_mode("plot")
+qtm(mpsz_pop2020, 
+    fill = "DEPENDENCY")
+```
+
+## Creating a choropleth map by using *tmap*\'s elements
+
+```{r}
+tm_shape(mpsz_pop2020)+
+  tm_fill("DEPENDENCY", 
+          style = "quantile", 
+          palette = "Blues",
+          title = "Dependency ratio") +
+  tm_layout(main.title = "Distribution of Dependency Ratio by planning subzone",
+            main.title.position = "center",
+            main.title.size = 1.2,
+            legend.height = 0.40, 
+            legend.width = 0.35,
+            frame = TRUE) +
+  tm_borders(alpha = 0.5) +
+  tm_compass(type="8star", size = 1) +
+  tm_scale_bar() +
+  tm_grid(alpha =0.5) +
+  tm_credits("Source: Planning Sub-zone boundary from Urban Redevelopment Authorithy (URA)\n and Population data from Department of Statistics DOS", 
+             position = c("left", "bottom"))
+```
+
+### Drawing a base map
+
+```{r}
+# tm_shape() is used to define the input data (i.e mpsz_pop2020) and tm_polygons() is used to draw the planning subzone polygons
+tm_shape(mpsz_pop2020) +
+  tm_polygons()
+```
+
+### Drawing a choropleth map using *tm_polygons()*
+
+```{r}
+tm_shape(mpsz_pop2020)+
+  tm_polygons("DEPENDENCY")
+```
+
+### Drawing a choropleth map using *tm_fill()* and \*tm_border()\*\*
+
+```{r}
+tm_shape(mpsz_pop2020)+
+  tm_fill("DEPENDENCY")
+```
+
+```{r}
+tm_shape(mpsz_pop2020)+
+  tm_fill("DEPENDENCY") +
+  tm_borders(lwd = 0.1,  alpha = 1)
+```
+
+### Data classification methods of **tmap**
+
+### 
