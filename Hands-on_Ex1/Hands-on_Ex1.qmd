@@ -3,18 +3,20 @@ title: "Hands-on Exercise 1: Geospatial Data Wrangling with R"
 editor: visual
 ---
 
+# Geospatial Data Wrangling with R
+
 ## Overview: 
 
 In this hands-on exercise, I learn how to import and wrangling geospatial data using appropriate R packages.
 
 ## Getting Started
 
-The code chunk below install and load [sf](https://r-spatial.github.io/sf/) and [tidyverse](https://tidyverse.tidyverse.org/) packages into R environment.
+The code chunk below install and load [sf](https://r-spatial.github.io/sf/), [tidyverse](https://tidyverse.tidyverse.org/) and [tmap](https://cran.r-project.org/web/packages/tmap/vignettes/tmap-getstarted.html) (for Chloropeth Mapping with R) packages into R environment.
 
 Firstly, ensure you have downloaded the pacman library, else run install.packages("pacman") on your console before proceeding with the below code.
 
 ```{r}
-pacman::p_load(sf, tidyverse)
+pacman::p_load(sf, tidyverse, tmap)
 
 ```
 
@@ -25,6 +27,7 @@ pacman::p_load(sf, tidyverse)
 ```{r}
 mpsz <- st_read(dsn = "data/geospatial", 
                   layer = "MP14_SUBZONE_WEB_PL")
+mpsz
 ```
 
 ### Importing polyline feature data
@@ -38,6 +41,13 @@ cyclingpath = st_read(dsn = "data/geospatial",
 
 ```{r}
 preschool = st_read("data/geospatial/pre-schools-location-kml.kml")
+```
+
+## Importing Attribute Data into R (Chloropleth Mapping with R)
+
+```{r}
+popdata <- read_csv("data/aspatial/respopagesextod2011to2020.csv")
+popdata
 ```
 
 ## Checking the Content of A Simple Feature Data Frame
@@ -142,3 +152,148 @@ listings_sf <- st_as_sf(listings,
 ```{r}
 glimpse(listings_sf)
 ```
+
+## Geoprocessing with sf package
+
+### Buffering
+
+```{r}
+# To compute 5 meter buffers around cycling paths
+buffer_cycling <- st_buffer(cyclingpath,
+                            dist=5, nQuadSegs = 30)
+```
+
+```{r}
+# To calculate the area of the buffers
+buffer_cycling$AREA <- st_area(buffer_cycling)
+```
+
+```{r}
+# To derive the total land involved using sum() of Base R
+sum(buffer_cycling$AREA)
+```
+
+### Point-in-polygon count
+
+```{r}
+# To get the number of pre-schools in each planning sub-zone.
+# ** DO NOT CONFUSE WITH st_intersection()
+mpsz3414$'PreSch Count' <- lengths(st_intersects(mpsz3414, preschool3414))
+```
+
+```{r}
+# To get the summary stats of the newly derived column 'PreSch Count' that pulls the number of pre-schools in each planning sub-zone.
+summary(mpsz3414$'PreSch Count')
+```
+
+```{r}
+# To pull the top planning sub-zone with the most number of pre-schools in its area, we can pull this using top_n() from dplyr package.
+top_n(mpsz3414, 1, 'PreSch Count')
+```
+
+```{r}
+# To calculate the area of each planning zone
+mpsz3414$Area <- mpsz3414 %>%
+  st_area()
+```
+
+```{r}
+mpsz3414$'PreSch Count'
+```
+
+```{r}
+# To compute the density i.e., how much of the land is covered by preschools?
+# mpsz3414$'PreSch Density' <- mpsz3414$'PreSch Count'/mpsz3414$Area * 1000000
+# Call dplyr for mutate(), otherwise throws an error.
+library(dplyr)
+mpsz3414 <- mpsz3414 %>%
+  mutate(`PreSch Density` = `PreSch Count`/Area * 1000000)
+```
+
+## Exploratory Data Analysis (EDA)
+
+```{r}
+# To plot histogram to understand the distribution of preschool density.
+
+hist(mpsz3414$'PreSch Density')
+```
+
+```{r}
+ggplot(data=mpsz3414, 
+       aes(x= as.numeric(`PreSch Density`)))+
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="light blue") +
+  labs(title = "Are pre-school even distributed in Singapore?",
+       subtitle= "There are many planning sub-zones with a single pre-school, on the other hand, \nthere are two planning sub-zones with at least 20 pre-schools",
+      x = "Pre-school density (per km sq)",
+      y = "Frequency")
+```
+
+```{r}
+# Using ggplot2 method, plot a scatterplot showing the relationship # between Pre-school Density and Pre-school Count.
+
+ggplot(data=mpsz3414, 
+       aes(x= as.numeric(`PreSch Density`),
+           y= `PreSch Count`))+
+  geom_point() +
+  xlim(0, 40) +
+  ylim(0,40) +
+  # Modify axis labels
+  xlab("Pre-school density (per km sq)") +
+  ylab("Pre-school count")
+```
+
+# Chloropleth Mapping with R
+
+## Data Preparation
+
+### Data Wrangling
+
+```{r}
+popdata
+```
+
+```{r}
+library(dplyr)
+popdata2020 <- popdata %>%
+  filter(Time == 2020) %>%
+  group_by(PA, SZ, AG) %>%
+  summarise(`POP` = sum(`Pop`)) %>%
+  ungroup()%>%
+  pivot_wider(names_from=AG, 
+              values_from=POP) %>%
+  mutate(YOUNG = rowSums(.[3:6])
+         +rowSums(.[12])) %>%
+mutate(`ECONOMY ACTIVE` = rowSums(.[7:11])+
+rowSums(.[13:15]))%>%
+mutate(`AGED`=rowSums(.[16:21])) %>%
+mutate(`TOTAL`=rowSums(.[3:21])) %>%  
+mutate(`DEPENDENCY` = (`YOUNG` + `AGED`)
+/`ECONOMY ACTIVE`) %>%
+  select(`PA`, `SZ`, `YOUNG`, 
+       `ECONOMY ACTIVE`, `AGED`, 
+       `TOTAL`, `DEPENDENCY`)
+```
+
+### Joining the attribute data and geospatial data
+
+```{r}
+# standardise PA and SZ to uppercase to match SUBZONE_N and PLN_AREA_N before geo-relational join
+popdata2020 <- popdata2020 %>%
+  mutate_at(.vars = vars(PA, SZ), 
+          .funs = funs(toupper)) %>%
+  filter(`ECONOMY ACTIVE` > 0)
+```
+
+```{r}
+# Geo-relational join
+ mpsz_pop2020 <- left_join(mpsz, popdata2020,
+                          by = c("SUBZONE_N" = "SZ"))
+```
+
+```{r}
+write_rds(mpsz_pop2020, "data/rds/mpszpop2020.rds")
+```
+
+## Choropleth Mapping Geospatial Data Using *tmap*
