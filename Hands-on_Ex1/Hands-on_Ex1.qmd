@@ -11,14 +11,24 @@ In this hands-on exercise, I learn how to import and wrangling geospatial data u
 
 ## Getting Started
 
-The code chunk below install and load [sf](https://r-spatial.github.io/sf/), [tidyverse](https://tidyverse.tidyverse.org/) and [tmap](https://cran.r-project.org/web/packages/tmap/vignettes/tmap-getstarted.html) (for Chloropeth Mapping with R) packages into R environment.
+The code chunk below install and load [sf](https://r-spatial.github.io/sf/), [tidyverse](https://tidyverse.tidyverse.org/) and [tmap](https://cran.r-project.org/web/packages/tmap/vignettes/tmap-getstarted.html) (for Chloropeth Mapping with R) packages into R environment. "tmap" is specifically used for part 2 of exercise 1, i.e., Chloropeth Mapping with R.
 
-Firstly, ensure you have downloaded the pacman library, else run install.packages("pacman") on your console before proceeding with the below code.
+Ensure pacman library is installed, else, run **install.packages("pacman")** on console first before proceeding with the below code. Otherwise, it will throw an error.
 
 ```{r}
 pacman::p_load(sf, tidyverse, tmap)
-
 ```
+
+```{r}
+# Q What is the purpose of using pacman versus calling the libraries via the below code?
+library(sf, tidyverse, tmap)
+```
+
+-   **sf** for importing, managing, and processing geospatial data,
+
+-   **tidyverse**, a family of R packages, is used for performing data science tasks such as importing, wrangling and visualising data. We will learn more about these packages in the exercise.
+
+-   **tmap** for drawing thematic maps.
 
 ## Importing Geospatial Data
 
