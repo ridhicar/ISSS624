@@ -114,3 +114,31 @@ preschool3414 <- st_transform(preschool,
 # To check the CRS
 st_crs(preschool3414)
 ```
+
+## Importing and Converting An Aspatial Data
+
+## Importing the aspatial data
+
+```{r}
+# To import listings.csv - tibble data frame.
+listings <- read_csv("data/aspatial/listings.csv")
+```
+
+```{r}
+# To examine if the data file has been imported correctly.
+list(listings)
+```
+
+### Creating a simple feature data frame from an aspatial data frame
+
+```{r}
+listings_sf <- st_as_sf(listings,
+                        coords = c("longitude",
+                                   "latitude"),
+                        crs=4326) %>%
+  st_transform(crs = 3414)
+```
+
+```{r}
+glimpse(listings_sf)
+```
