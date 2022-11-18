@@ -82,3 +82,35 @@ plot(st_geometry(mpsz))
 # To plot the sf object by using specific attribute
 plot(mpsz["PLN_AREA_N"])
 ```
+
+## Working with Projection
+
+### Assigning EPSG code to a simple feature data frame
+
+```{r}
+# To check the CSR
+st_crs(mpsz)
+```
+
+```{r}
+# To assign the correct EPSG code to mpsz data frame
+mpsz3414 <- st_set_crs(mpsz, 3414)
+```
+
+```{r}
+# To check the CSR again
+st_crs(mpsz3414)
+```
+
+### Transforming the projection of the preschool from wg84 to svy21.
+
+```{r}
+# To reproject preschool from one coordinate system i.e., wg84 to another i.e., svy21.
+preschool3414 <- st_transform(preschool,
+                              crs = 3414)
+```
+
+```{r}
+# To check the CRS
+st_crs(preschool3414)
+```
