@@ -11,6 +11,8 @@ In this hands-on exercise, I learn how to import and wrangling geospatial data u
 
 The code chunk below install and load [sf](https://r-spatial.github.io/sf/) and [tidyverse](https://tidyverse.tidyverse.org/) packages into R environment.
 
+Firstly, ensure you have downloaded the pacman library, else run install.packages("pacman") on your console before proceeding with the below code.
+
 ```{r}
 pacman::p_load(sf, tidyverse)
 
@@ -56,4 +58,27 @@ glimpse(mpsz)
 
 ```{r}
 head(mpsz, n=5)
+```
+
+## Plotting the Geospatial Data
+
+```{r}
+plot(mpsz)
+```
+
+Using max.plot = 15 to plot all attributes;
+
+```{r}
+# To visualise the geospatial features
+plot(mpsz, max.plot = 15)
+```
+
+```{r}
+# To plot only the geometry
+plot(st_geometry(mpsz))
+```
+
+```{r}
+# To plot the sf object by using specific attribute
+plot(mpsz["PLN_AREA_N"])
 ```
