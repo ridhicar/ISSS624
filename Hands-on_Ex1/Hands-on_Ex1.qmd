@@ -37,3 +37,23 @@ cyclingpath = st_read(dsn = "data/geospatial",
 ```{r}
 preschool = st_read("data/geospatial/pre-schools-location-kml.kml")
 ```
+
+## Checking the Content of A Simple Feature Data Frame
+
+### Working with st_geometry()
+
+```{r}
+st_geometry(mpsz)
+```
+
+### Working with glimpse()
+
+```{r}
+glimpse(mpsz)
+```
+
+### Working with head()
+
+```{r}
+head(mpsz, n=5)
+```
