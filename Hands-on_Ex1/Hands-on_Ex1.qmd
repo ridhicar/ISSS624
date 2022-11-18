@@ -9,7 +9,7 @@ In this hands-on exercise, I learn how to import and wrangling geospatial data u
 
 ## Getting Started
 
-The code chunk below install and load [sf](https://r-spatial.github.io/sf/) and tidyverse packages into R environment.
+The code chunk below install and load [sf](https://r-spatial.github.io/sf/) and [tidyverse](https://tidyverse.tidyverse.org/) packages into R environment.
 
 ```{r}
 pacman::p_load(sf, tidyverse)
@@ -23,4 +23,11 @@ pacman::p_load(sf, tidyverse)
 ```{r}
 mpsz <- st_read(dsn = "data/geospatial", 
                   layer = "MP14_SUBZONE_WEB_PL")
+```
+
+### Importing polyline feature data
+
+```{r}
+cyclingpath = st_read(dsn = "data/geospatial",
+                      layer = "CyclingPath")
 ```

@@ -179,6 +179,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <li><a href="#importing-geospatial-data" id="toc-importing-geospatial-data" class="nav-link" data-scroll-target="#importing-geospatial-data">Importing Geospatial Data</a>
   <ul class="collapse">
   <li><a href="#importing-polygon-feature-data" id="toc-importing-polygon-feature-data" class="nav-link" data-scroll-target="#importing-polygon-feature-data">Importing polygon feature data</a></li>
+  <li><a href="#importing-polyline-feature-data" id="toc-importing-polyline-feature-data" class="nav-link" data-scroll-target="#importing-polyline-feature-data">Importing polyline feature data</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -208,7 +209,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </section>
 <section id="getting-started" class="level2">
 <h2 class="anchored" data-anchor-id="getting-started">Getting Started</h2>
-<p>The code chunk below install and load <a href="https://r-spatial.github.io/sf/">sf</a> and tidyverse packages into R environment.</p>
+<p>The code chunk below install and load <a href="https://r-spatial.github.io/sf/">sf</a> and <a href="https://tidyverse.tidyverse.org/">tidyverse</a> packages into R environment.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(sf, tidyverse)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
@@ -228,6 +229,23 @@ Simple feature collection with 323 features and 15 fields
 Geometry type: MULTIPOLYGON
 Dimension:     XY
 Bounding box:  xmin: 2667.538 ymin: 15748.72 xmax: 56396.44 ymax: 50256.33
+Projected CRS: SVY21</code></pre>
+</div>
+</div>
+</section>
+<section id="importing-polyline-feature-data" class="level3">
+<h3 class="anchored" data-anchor-id="importing-polyline-feature-data">Importing polyline feature data</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>cyclingpath <span class="ot">=</span> <span class="fu">st_read</span>(<span class="at">dsn =</span> <span class="st">"data/geospatial"</span>,</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>                      <span class="at">layer =</span> <span class="st">"CyclingPath"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `CyclingPath' from data source 
+  `/Users/ridz/ridhicar/ISSS624/Hands-on_Ex1/data/geospatial' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 1625 features and 2 fields
+Geometry type: LINESTRING
+Dimension:     XY
+Bounding box:  xmin: 12711.19 ymin: 28711.33 xmax: 42626.09 ymax: 48948.15
 Projected CRS: SVY21</code></pre>
 </div>
 </div>
