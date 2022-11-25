@@ -5,7 +5,7 @@ editor: visual
 
 # Geospatial Data Wrangling with R
 
-## Overview: 
+## Overview:
 
 In this hands-on exercise, I learn how to import and wrangling geospatial data using appropriate R packages.
 
@@ -220,6 +220,11 @@ mpsz3414 <- mpsz3414 %>%
   mutate(`PreSch Density` = `PreSch Count`/Area * 1000000)
 ```
 
+```{r}
+# same as (without dplyr-mutate): 
+mpsz3414$'PreSch Density' <- mpsz3414$`PreSch Count`/mpsz3414$Area * 1000000
+```
+
 ## Exploratory Data Analysis (EDA)
 
 ```{r}
@@ -316,7 +321,7 @@ qtm(mpsz_pop2020,
     fill = "DEPENDENCY")
 ```
 
-## Creating a choropleth map by using *tmap*\'s elements
+## Creating a choropleth map by using *tmap*'s elements
 
 ```{r}
 tm_shape(mpsz_pop2020)+

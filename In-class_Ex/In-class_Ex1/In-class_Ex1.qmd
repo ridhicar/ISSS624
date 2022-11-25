@@ -1,0 +1,78 @@
+---
+title: "In-class Exercise 1"
+editor: visual
+---
+
+## 1. Overview
+
+This document covers the in-class exercise 2.
+
+## 2. Getting Started
+
+The code check below will install and load tidyverse and sf packages. **pacman** is a wrapper in R that helps us load and install packages.
+
+```{r}
+# same as:
+# library(pacman)
+# p_load(tidyverse, sf)
+pacman::p_load(tidyverse, sf, tmap)
+```
+
+## 3. Importing Geospatial Data
+
+### 3.1. Importing polygon features
+
+This code chunk will import ESRI shapefile into R.
+
+```{r}
+hunan_sf = st_read(dsn = "data/geospatial", 
+                  layer = "Hunan")
+```
+
+The message above reveals that the geospatial objects are multipolygon features. There are a total of 88 multipolygon features and 7 fields in `hunan` simple feature data frame. `hunan` is in **WGS 84** projected coordinates systems. The bounding box provides the x extend and y extend of the data.
+
+### 3.2. Importing Attribute (Aspatial) Data in csv into R
+
+This code chunks below will import Dictionary.xlsx and Hunan_2012.cv into R.
+
+```{r}
+# popdata <- read_csv("chap02/data/aspatial/respopagesextod2011to2020.csv")
+# dict <- readxl::read_excel("/Users/ridz/ridhicar/ISSS624/In-class_Ex/In-class_Ex1/data/aspatial/Dictionary.xlsx")
+```
+
+```{r}
+hunan <- read_csv("/Users/ridz/ridhicar/ISSS624/In-class_Ex/In-class_Ex1/data/aspatial/Hunan_2012.csv")
+```
+
+## 4. Checking the Content of A Simple Feature Data Frame
+
+### 4.1. Working with *st_geometry()*
+
+The column in the sf data.frame that contains the geometries is a list, of class `sfc`. We can retrieve the geometry list-column in this case by hunan\$geom or hunan\[\[1\]\], but the more general way uses *st_geometry()* as shown in the code chunk below.
+
+```{r}
+st_geometry(hunan_sf)
+```
+
+### 4.2. Working with glimpse()
+
+*glimpse()* report reveals the data type of each fields.
+
+```{r}
+glimpse(hunan_sf)
+```
+
+### 4.3. Working with *head()*
+
+```{r}
+# To fetch the first 5 rows of hunan dataset.
+head(hunan_sf, n=5)
+```
+
+```{r}
+st_crs(hunan_sf)
+```
+
+Although `hunan_sf` data frame is projected in WGS 84 but when we read until the end of the print, it indicates that the EPSG is 4326. This is a the correct EPSG code for WGS 84, it should be [4326](https://support.virtual-surveyor.com/en/support/solutions/articles/1000261351-what-is-wgs84-#:~:text=The%20WGS84%20Coordinate%20Systems%20adds,EPSG%20code%2C%20which%20is%204326.). Hence, there is no need for correction, use of *st_set_crs()* of **sf** package.
+
+{{< >}}
