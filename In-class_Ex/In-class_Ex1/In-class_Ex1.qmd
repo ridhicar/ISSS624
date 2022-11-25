@@ -294,3 +294,119 @@ plot(wm_r, coords, pch = 19, cex = 0.6, add = TRUE, col = "red", main="Rook Cont
 ```
 
 ## 10. Computing distance based neighbours
+
+In this section, we will use ***dnearneigh()*** of **spdep** package to derive the distance-based weight matrices.
+
+The function identifies neighbours of region points by Euclidean distance with a distance band with lower d1= and upper d2= bounds controlled by the bounds= argument. If unprojected coordinates are used and either specified in the coordinates object x or with x as a two column matrix and longlat=TRUE, great circle distances in **km** will be calculated assuming the WGS84 reference ellipsoid.
+
+### 10.1 Determine the cut-off distance
+
+In this section, we will follow a series of steps to determine the upper limit for the distance. This involves:
+
+-   Return a matrix with the indices of points belonging to the set of the k nearest neighbours of each other by using [***knearneigh()***](https://r-spatial.github.io/spdep/reference/knearneigh.html) of **spdep**.
+
+-   Convert the knn object returned by *knearneigh()* into a neighbours list of class nb with a list of integer vectors containing neighbour region number ids by using [***knn2nb()***](https://r-spatial.github.io/spdep/reference/knn2nb.html)**.**
+
+-   Return the length of neighbour relationship edges by using [***nbdists()***](https://r-spatial.github.io/spdep/reference/nbdists.html) of **spdep**. The function returns in the units of the coordinates if the coordinates are projected, in km otherwise.
+
+-   Remove the list structure of the returned object by using [*unlist()*](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/unlist)*.*
+
+    ```{r}
+     # coords <- coordinates(hunan)
+    k1 <- knn2nb(knearneigh(coords))
+    k1dists <- unlist(nbdists(k1, coords, longlat = TRUE))
+    summary(k1dists)
+    ```
+
+The summary above shows that the largest first nearest neighbour distance i.e., the Max. is 61.79 km, so using this as the upper threshold gives us certainty that all units will have at least one neighbour.
+
+### 10.2 Computing fixed distance weight matrix
+
+The code chunk below will compute the distance weight matrix by using ***dnearneigh().***
+
+```{r}
+wm_d62 <- dnearneigh(coords, 0, 62, longlat = TRUE)
+wm_d62
+```
+
+The summary report above shows that there are on average at least 3\* neighbours per area unit.
+
+The code chunk below is used to display the content of wm_d62 weight matrix.
+
+```{r}
+str(wm_d62)
+```
+
+The code chunk below displays the structure of the weight matrix by combining ***table()*** and ***card()*** of the **spdep** package.
+
+```{r}
+table(hunan$County, card(wm_d62))
+```
+
+```{r}
+n_comp <- n.comp.nb(wm_d62)
+n_comp$nc
+```
+
+```{r}
+table(n_comp$comp.id)
+```
+
+#### 10.2.1 Plotting fixed distance weight matrix
+
+The code chunk below plots the distance weight matrix.
+
+```{r}
+plot(hunan$geometry, border="lightgrey")
+plot(wm_d62, coords, add=TRUE)
+plot(k1, coords, add=TRUE, col="red", length=0.08)
+```
+
+\
+The red lines show the links of 1st nearest neighbours and the black lines show the links of neighbours within the cut-off distance of 62km.
+
+The code chunk below plots 2 subplots. The first subplot's Red lines shows the 1st nearest neighbours. The second subplot's Black lines show the lists of neighbours within the cut-off distance of 62 km.
+
+```{r}
+par(mfrow=c(1,2))
+plot(hunan$geometry, border="lightgrey")
+plot(k1, coords, add=TRUE, col="red", length=0.08, main="1st nearest neighbours")
+plot(hunan$geometry, border="lightgrey")
+plot(wm_d62, coords, add=TRUE, pch = 19, cex = 0.6, main="Distance link")
+```
+
+### 10.3 Computing adaptive distance weight matrix
+
+One of the characteristics of fixed distance weight matrix is that more densely settled areas (usually the urban areas) tend to have more neighbours and the less densely settled areas (usually the rural counties) tend to have lesser neighbours. Having many neighbours smoothes the neighbour relationship across more neighbours.
+
+We can control the number of neighbours directly using k-nearest neighbours, either by accepting asymmetric neighbours or by imposing symmetry. The code chunk below sets k equal to 6 nearest neighbours.
+
+```{r}
+knn6 <- knn2nb(knearneigh(coords, k=6))
+knn6
+```
+
+The code chunk below displays the content of the matrix knn6. Each county will have six neighbours.
+
+```{r}
+str(knn6)
+```
+
+#### 10.3.1 Plotting distance based on neighbours
+
+```{r}
+plot(hunan$geometry, border="lightgrey")
+plot(knn6, coords, pch = 19, cex = 0.6, add = TRUE, col = "red")
+```
+
+## 11. Weights based on IDW
+
+In this section, we derive the spatial weight matrix based on the Inversed Distance method.
+
+The code chunk below computes the distances between ares using ***nbdists()*** of the **spdep** package.
+
+```{r}
+dist <- nbdists(wm_q, coords, longlat = TRUE)
+ids <- lapply(dist, function(x) 1/(x))
+ids
+```
