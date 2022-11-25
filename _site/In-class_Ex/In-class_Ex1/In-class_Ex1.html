@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>ISSS624 - In-class Exercise 1</title>
+<title>ISSS624 - In-class Exercise 1: Spatial Weights And Applications</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -188,7 +188,6 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <li><a href="#importing-geospatial-data" id="toc-importing-geospatial-data" class="nav-link" data-scroll-target="#importing-geospatial-data">3. Importing Geospatial Data</a>
   <ul class="collapse">
   <li><a href="#importing-polygon-features" id="toc-importing-polygon-features" class="nav-link" data-scroll-target="#importing-polygon-features">3.1. Importing polygon features</a></li>
-  <li><a href="#importing-attribute-aspatial-data-in-csv-into-r" id="toc-importing-attribute-aspatial-data-in-csv-into-r" class="nav-link" data-scroll-target="#importing-attribute-aspatial-data-in-csv-into-r">3.2. Importing Attribute (Aspatial) Data in csv into R</a></li>
   </ul></li>
   <li><a href="#checking-the-content-of-a-simple-feature-data-frame" id="toc-checking-the-content-of-a-simple-feature-data-frame" class="nav-link" data-scroll-target="#checking-the-content-of-a-simple-feature-data-frame">4. Checking the Content of A Simple Feature Data Frame</a>
   <ul class="collapse">
@@ -196,6 +195,11 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <li><a href="#working-with-glimpse" id="toc-working-with-glimpse" class="nav-link" data-scroll-target="#working-with-glimpse">4.2. Working with glimpse()</a></li>
   <li><a href="#working-with-head" id="toc-working-with-head" class="nav-link" data-scroll-target="#working-with-head">4.3. Working with <em>head()</em></a></li>
   </ul></li>
+  <li><a href="#importing-attribute-aspatial-data-in-csv-into-r" id="toc-importing-attribute-aspatial-data-in-csv-into-r" class="nav-link" data-scroll-target="#importing-attribute-aspatial-data-in-csv-into-r">5. Importing Attribute (Aspatial) Data in csv into R</a>
+  <ul class="collapse">
+  <li><a href="#working-with-list" id="toc-working-with-list" class="nav-link" data-scroll-target="#working-with-list">5.1 Working with <em>list()</em></a></li>
+  </ul></li>
+  <li><a href="#performing-relational-join" id="toc-performing-relational-join" class="nav-link" data-scroll-target="#performing-relational-join">6. Performing relational join</a></li>
   </ul>
 </nav>
     </div>
@@ -204,7 +208,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">In-class Exercise 1</h1>
+<h1 class="title">In-class Exercise 1: Spatial Weights And Applications</h1>
 </div>
 
 
@@ -220,23 +224,35 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 <section id="overview" class="level2">
 <h2 class="anchored" data-anchor-id="overview">1. Overview</h2>
-<p>This document covers the in-class exercise 2.</p>
+<p>This document covers the in-class exercise 1. In this exercise, we will learn how to compute spatial weights using R.</p>
 </section>
 <section id="getting-started" class="level2">
 <h2 class="anchored" data-anchor-id="getting-started">2. Getting Started</h2>
-<p>The code check below will install and load tidyverse and sf packages. <strong>pacman</strong> is a wrapper in R that helps us load and install packages.</p>
+<p>The code check below will install and load the relevant packages. <strong>pacman</strong> is a wrapper in R that helps us load and install packages.</p>
+<ul>
+<li><p>Functions of <strong>tidyverse</strong> can be used to perform data science tasks such as importing, wrangling, and visualizing data.</p></li>
+<li><p>Function of <strong>readr</strong> package (part of tidyverse) can be used to import csv files.</p></li>
+<li><p><strong><em>st_read(dsn = “file path”, layer = “file name”)</em></strong> of <strong>sf</strong> package can be used to import geospatial data.</p></li>
+<li><p>Join function i.e., <strong><em>left_join(dataframe1, dataframe2)</em></strong> of <strong>dplyr</strong> can be used to perform relational join.</p></li>
+<li><p>Functions of <strong>spdep</strong> can be used to compute spatial weights and to calculate spatially lagged variables.</p></li>
+</ul>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># same as:</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co"># library(pacman)</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># p_load(tidyverse, sf)</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(tidyverse, sf, tmap)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># p_load(tidyverse, sf ,..)</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(tidyverse, sf, tmap, spdep)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="importing-geospatial-data" class="level2">
 <h2 class="anchored" data-anchor-id="importing-geospatial-data">3. Importing Geospatial Data</h2>
 <section id="importing-polygon-features" class="level3">
 <h3 class="anchored" data-anchor-id="importing-polygon-features">3.1. Importing polygon features</h3>
-<p>This code chunk will import ESRI shapefile into R.</p>
+<p>This code chunk uses <strong>st_read()</strong> function of <strong>sf</strong> package to import Hunan county boundary layer ESRI shapefile into R as a polygon feature data frame.</p>
+<p>st_read() uses two arguments:</p>
+<ul>
+<li><p><code>dsn</code>to define the data path</p></li>
+<li><p><code>layer</code> to provide the shapefile name</p></li>
+</ul>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>hunan_sf <span class="ot">=</span> <span class="fu">st_read</span>(<span class="at">dsn =</span> <span class="st">"data/geospatial"</span>, </span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>                  <span class="at">layer =</span> <span class="st">"Hunan"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -253,27 +269,6 @@ Geodetic CRS:  WGS 84</code></pre>
 </div>
 <p>The message above reveals that the geospatial objects are multipolygon features. There are a total of 88 multipolygon features and 7 fields in <code>hunan</code> simple feature data frame. <code>hunan</code> is in <strong>WGS 84</strong> projected coordinates systems. The bounding box provides the x extend and y extend of the data.</p>
 </section>
-<section id="importing-attribute-aspatial-data-in-csv-into-r" class="level3">
-<h3 class="anchored" data-anchor-id="importing-attribute-aspatial-data-in-csv-into-r">3.2. Importing Attribute (Aspatial) Data in csv into R</h3>
-<p>This code chunks below will import Dictionary.xlsx and Hunan_2012.cv into R.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># popdata &lt;- read_csv("chap02/data/aspatial/respopagesextod2011to2020.csv")</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co"># dict &lt;- readxl::read_excel("/Users/ridz/ridhicar/ISSS624/In-class_Ex/In-class_Ex1/data/aspatial/Dictionary.xlsx")</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>hunan <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"/Users/ridz/ridhicar/ISSS624/In-class_Ex/In-class_Ex1/data/aspatial/Hunan_2012.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Rows: 88 Columns: 29
-── Column specification ────────────────────────────────────────────────────────
-Delimiter: ","
-chr  (2): County, City
-dbl (27): avg_wage, deposite, FAI, Gov_Rev, Gov_Exp, GDP, GDPPC, GIO, Loan, ...
-
-ℹ Use `spec()` to retrieve the full column specification for this data.
-ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
-</div>
-</div>
-</section>
 </section>
 <section id="checking-the-content-of-a-simple-feature-data-frame" class="level2">
 <h2 class="anchored" data-anchor-id="checking-the-content-of-a-simple-feature-data-frame">4. Checking the Content of A Simple Feature Data Frame</h2>
@@ -281,7 +276,7 @@ dbl (27): avg_wage, deposite, FAI, Gov_Rev, Gov_Exp, GDP, GDPPC, GIO, Loan, ...
 <h3 class="anchored" data-anchor-id="working-with-st_geometry">4.1. Working with <em>st_geometry()</em></h3>
 <p>The column in the sf data.frame that contains the geometries is a list, of class <code>sfc</code>. We can retrieve the geometry list-column in this case by hunan$geom or hunan[[1]], but the more general way uses <em>st_geometry()</em> as shown in the code chunk below.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">st_geometry</span>(hunan_sf)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">st_geometry</span>(hunan_sf)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Geometry set for 88 features 
 Geometry type: POLYGON
@@ -309,9 +304,9 @@ First 5 geometries:</code></pre>
 </section>
 <section id="working-with-glimpse" class="level3">
 <h3 class="anchored" data-anchor-id="working-with-glimpse">4.2. Working with glimpse()</h3>
-<p><em>glimpse()</em> report reveals the data type of each fields.</p>
+<p><strong>glimpse()</strong> report of <strong>dplyr</strong> reveals the data type of each fields. For example, <code>Shape Area</code> <code>Shape Length</code> fields are <strong>double-precision values,</strong> <code>ID_3</code> field is in <strong>integer</strong> data type.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(hunan_sf)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(hunan_sf)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Rows: 88
 Columns: 8
@@ -329,8 +324,8 @@ $ geometry   &lt;POLYGON [°]&gt; POLYGON ((112.0625 29.75523..., POLYGON ((112.
 <section id="working-with-head" class="level3">
 <h3 class="anchored" data-anchor-id="working-with-head">4.3. Working with <em>head()</em></h3>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># To fetch the first 5 rows of hunan dataset.</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(hunan_sf, <span class="at">n=</span><span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># To fetch the first 5 rows of hunan dataset.</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(hunan_sf, <span class="at">n=</span><span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Simple feature collection with 5 features and 7 fields
 Geometry type: POLYGON
@@ -351,8 +346,9 @@ Geodetic CRS:  WGS 84
 5 POLYGON ((111.6324 29.76288...</code></pre>
 </div>
 </div>
+<p>The below code chunk uses <strong><em>st_crs()</em></strong> of <strong>sf</strong> package pulls the coordinate system of <code>hunan_sf</code>.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">st_crs</span>(hunan_sf)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">st_crs</span>(hunan_sf)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Coordinate Reference System:
   User input: WGS 84 
@@ -373,11 +369,70 @@ GEOGCRS["WGS 84",
     ID["EPSG",4326]]</code></pre>
 </div>
 </div>
-<p>Although <code>hunan_sf</code> data frame is projected in WGS 84 but when we read until the end of the print, it indicates that the EPSG is 4326. This is a the correct EPSG code for WGS 84, it should be <a href="https://support.virtual-surveyor.com/en/support/solutions/articles/1000261351-what-is-wgs84-#:~:text=The%20WGS84%20Coordinate%20Systems%20adds,EPSG%20code%2C%20which%20is%204326.">4326</a>. Hence, there is no need for correction, use of <em>st_set_crs()</em> of <strong>sf</strong> package.</p>
-<p></p>
-
-
+<p><code>hunan_sf</code> data frame is projected in WGS 84, when we read until the end of the print, it indicates that the EPSG is 4326. This is the correct EPSG code for WGS 84, it should be <a href="https://support.virtual-surveyor.com/en/support/solutions/articles/1000261351-what-is-wgs84-#:~:text=The%20WGS84%20Coordinate%20Systems%20adds,EPSG%20code%2C%20which%20is%204326.">4326</a>. Hence, there is no need for correction, use of <em>st_set_crs()</em> of <strong>sf</strong> package.</p>
 </section>
+</section>
+<section id="importing-attribute-aspatial-data-in-csv-into-r" class="level2">
+<h2 class="anchored" data-anchor-id="importing-attribute-aspatial-data-in-csv-into-r">5. Importing Attribute (Aspatial) Data in csv into R</h2>
+<p>This code chunks below will import Dictionary.xlsx (optional) and Hunan_2012.csv into R. We will use <strong><em>read_csv()</em></strong>of <strong>readr</strong> package to import Hunan_2012.csv. The output is R dataframe class called <code>hunan2012</code>.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>dict <span class="ot">&lt;-</span> readxl<span class="sc">::</span><span class="fu">read_excel</span>(<span class="st">"/Users/ridz/ridhicar/ISSS624/In-class_Ex/In-class_Ex1/data/aspatial/Dictionary.xlsx"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>hunan2012 <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"/Users/ridz/ridhicar/ISSS624/In-class_Ex/In-class_Ex1/data/aspatial/Hunan_2012.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Rows: 88 Columns: 29
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr  (2): County, City
+dbl (27): avg_wage, deposite, FAI, Gov_Rev, Gov_Exp, GDP, GDPPC, GIO, Loan, ...
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
+</div>
+</div>
+<section id="working-with-list" class="level3">
+<h3 class="anchored" data-anchor-id="working-with-list">5.1 Working with <em>list()</em></h3>
+<p>The code chunk below shows <strong><em>list()</em></strong> of Base R instead of <em>glimpse()</em>, used to examine if the data file, <code>hunan2012</code> has been imported correctly.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">list</span>(hunan2012)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[[1]]
+# A tibble: 88 × 29
+   County    City     avg_w…¹ depos…²    FAI Gov_Rev Gov_Exp    GDP GDPPC    GIO
+   &lt;chr&gt;     &lt;chr&gt;      &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;
+ 1 Anhua     Yiyang     30544  10967   6832.    457.   2703  13225  14567  9277.
+ 2 Anren     Chenzhou   28058   4599.  6386.    221.   1455.  4941. 12761  4189.
+ 3 Anxiang   Changde    31935   5517.  3541     244.   1780. 12482  23667  5109.
+ 4 Baojing   Hunan W…   30843   2250   1005.    193.   1379.  4088. 14563  3624.
+ 5 Chaling   Zhuzhou    31251   8241.  6508.    620.   1947  11585  20078  9158.
+ 6 Changning Hengyang   28518  10860   7920     770.   2632. 19886  24418 37392 
+ 7 Changsha  Changsha   54540  24332  33624    5350    7886. 88009  88656 51361 
+ 8 Chengbu   Shaoyang   28597   2581.  1922.    161.   1192.  2570. 10132  1681.
+ 9 Chenxi    Huaihua    33580   4990   5818.    460.   1724.  7755. 17026  6644.
+10 Cili      Zhangji…   33099   8117.  4498.    500.   2306. 11378  18714  5843.
+# … with 78 more rows, 19 more variables: Loan &lt;dbl&gt;, NIPCR &lt;dbl&gt;, Bed &lt;dbl&gt;,
+#   Emp &lt;dbl&gt;, EmpR &lt;dbl&gt;, EmpRT &lt;dbl&gt;, Pri_Stu &lt;dbl&gt;, Sec_Stu &lt;dbl&gt;,
+#   Household &lt;dbl&gt;, Household_R &lt;dbl&gt;, NOIP &lt;dbl&gt;, Pop_R &lt;dbl&gt;, RSCG &lt;dbl&gt;,
+#   Pop_T &lt;dbl&gt;, Agri &lt;dbl&gt;, Service &lt;dbl&gt;, Disp_Inc &lt;dbl&gt;, RORP &lt;dbl&gt;,
+#   ROREmp &lt;dbl&gt;, and abbreviated variable names ¹​avg_wage, ²​deposite</code></pre>
+</div>
+</div>
+<p>The output reveals that <code>hunan2012</code> tibble data frame consists of 88 rows and 29 columns.<br>
+</p>
+</section>
+</section>
+<section id="performing-relational-join" class="level2">
+<h2 class="anchored" data-anchor-id="performing-relational-join">6. Performing relational join</h2>
+<p>The code chunk below uses <strong><em>left_join(dataframe1, dataframe2)</em></strong> of <strong>dplyr</strong> package to update the attribute table of hunan’s SpatialPolygonsDataFrame with the attribute fields of hunan2012 dataframe.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>hunan <span class="ot">&lt;-</span> <span class="fu">left_join</span>(hunan_sf, hunan2012)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Joining, by = "County"</code></pre>
+</div>
+</div>
+
+
 </section>
 
 </main> <!-- /main -->

@@ -1,28 +1,44 @@
 ---
-title: "In-class Exercise 1"
+title: "In-class Exercise 1: Spatial Weights And Applications"
 editor: visual
 ---
 
 ## 1. Overview
 
-This document covers the in-class exercise 2.
+This document covers the in-class exercise 1. In this exercise, we will learn how to compute spatial weights using R.
 
 ## 2. Getting Started
 
-The code check below will install and load tidyverse and sf packages. **pacman** is a wrapper in R that helps us load and install packages.
+The code check below will install and load the relevant packages. **pacman** is a wrapper in R that helps us load and install packages.
+
+-   Functions of **tidyverse** can be used to perform data science tasks such as importing, wrangling, and visualizing data.
+
+-   Function of **readr** package (part of tidyverse) can be used to import csv files.
+
+-   ***st_read(dsn = "file path", layer = "file name")*** of **sf** package can be used to import geospatial data.
+
+-   Join function i.e., ***left_join(dataframe1, dataframe2)*** of **dplyr** can be used to perform relational join.
+
+-   Functions of **spdep** can be used to compute spatial weights and to calculate spatially lagged variables.
 
 ```{r}
 # same as:
 # library(pacman)
-# p_load(tidyverse, sf)
-pacman::p_load(tidyverse, sf, tmap)
+# p_load(tidyverse, sf ,..)
+pacman::p_load(tidyverse, sf, tmap, spdep)
 ```
 
 ## 3. Importing Geospatial Data
 
 ### 3.1. Importing polygon features
 
-This code chunk will import ESRI shapefile into R.
+This code chunk uses **st_read()** function of **sf** package to import Hunan county boundary layer ESRI shapefile into R as a polygon feature data frame.
+
+st_read() uses two arguments:
+
+-   `dsn`to define the data path
+
+-   `layer` to provide the shapefile name
 
 ```{r}
 hunan_sf = st_read(dsn = "data/geospatial", 
@@ -30,19 +46,6 @@ hunan_sf = st_read(dsn = "data/geospatial",
 ```
 
 The message above reveals that the geospatial objects are multipolygon features. There are a total of 88 multipolygon features and 7 fields in `hunan` simple feature data frame. `hunan` is in **WGS 84** projected coordinates systems. The bounding box provides the x extend and y extend of the data.
-
-### 3.2. Importing Attribute (Aspatial) Data in csv into R
-
-This code chunks below will import Dictionary.xlsx and Hunan_2012.cv into R.
-
-```{r}
-# popdata <- read_csv("chap02/data/aspatial/respopagesextod2011to2020.csv")
-# dict <- readxl::read_excel("/Users/ridz/ridhicar/ISSS624/In-class_Ex/In-class_Ex1/data/aspatial/Dictionary.xlsx")
-```
-
-```{r}
-hunan <- read_csv("/Users/ridz/ridhicar/ISSS624/In-class_Ex/In-class_Ex1/data/aspatial/Hunan_2012.csv")
-```
 
 ## 4. Checking the Content of A Simple Feature Data Frame
 
@@ -56,7 +59,7 @@ st_geometry(hunan_sf)
 
 ### 4.2. Working with glimpse()
 
-*glimpse()* report reveals the data type of each fields.
+**glimpse()** report of **dplyr** reveals the data type of each fields. For example, `Shape Area` `Shape Length` fields are **double-precision values,** `ID_3` field is in **integer** data type.
 
 ```{r}
 glimpse(hunan_sf)
@@ -69,10 +72,40 @@ glimpse(hunan_sf)
 head(hunan_sf, n=5)
 ```
 
+The below code chunk uses ***st_crs()*** of **sf** package pulls the coordinate system of `hunan_sf`.
+
 ```{r}
 st_crs(hunan_sf)
 ```
 
-Although `hunan_sf` data frame is projected in WGS 84 but when we read until the end of the print, it indicates that the EPSG is 4326. This is a the correct EPSG code for WGS 84, it should be [4326](https://support.virtual-surveyor.com/en/support/solutions/articles/1000261351-what-is-wgs84-#:~:text=The%20WGS84%20Coordinate%20Systems%20adds,EPSG%20code%2C%20which%20is%204326.). Hence, there is no need for correction, use of *st_set_crs()* of **sf** package.
+`hunan_sf` data frame is projected in WGS 84, when we read until the end of the print, it indicates that the EPSG is 4326. This is the correct EPSG code for WGS 84, it should be [4326](https://support.virtual-surveyor.com/en/support/solutions/articles/1000261351-what-is-wgs84-#:~:text=The%20WGS84%20Coordinate%20Systems%20adds,EPSG%20code%2C%20which%20is%204326.). Hence, there is no need for correction, use of *st_set_crs()* of **sf** package.
 
-{{< >}}
+## 5. Importing Attribute (Aspatial) Data in csv into R
+
+This code chunks below will import Dictionary.xlsx (optional) and Hunan_2012.csv into R. We will use ***read_csv()***of **readr** package to import Hunan_2012.csv. The output is R dataframe class called `hunan2012`.
+
+```{r}
+dict <- readxl::read_excel("/Users/ridz/ridhicar/ISSS624/In-class_Ex/In-class_Ex1/data/aspatial/Dictionary.xlsx")
+```
+
+```{r}
+hunan2012 <- read_csv("/Users/ridz/ridhicar/ISSS624/In-class_Ex/In-class_Ex1/data/aspatial/Hunan_2012.csv")
+```
+
+### 5.1 Working with *list()*
+
+The code chunk below shows ***list()*** of Base R instead of *glimpse()*, used to examine if the data file, `hunan2012` has been imported correctly.
+
+```{r}
+list(hunan2012)
+```
+
+The output reveals that `hunan2012` tibble data frame consists of 88 rows and 29 columns. \
+
+## 6. Performing relational join
+
+The code chunk below uses ***left_join(dataframe1, dataframe2)*** of **dplyr** package to update the attribute table of hunan's SpatialPolygonsDataFrame with the attribute fields of hunan2012 dataframe.
+
+```{r}
+hunan <- left_join(hunan_sf, hunan2012)
+```
