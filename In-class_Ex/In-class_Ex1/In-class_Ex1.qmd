@@ -236,3 +236,61 @@ summary(wm_r)
 ```
 
 The summary report above shows that there are 88 area units in Hunan. The most connect area unit has 10 neighbours. There are two area units with only one neighbours.
+
+## 9.3 Visualizing contiguity weights
+
+We can visualize contiguity weights using a connectivity graph. A connectivity graph takes a point and then displays a line to each neighbouring point. So far, we have been working with polygons, we need to get points in order to make our connectivity graphs. The most method typical method for this will be polygon centroids. We will use function(s) from the **sf** package to pull the Latitude and Longitude of the Polygon Centroids.
+
+We need the coordinates in a separate dataframe, this can be done using the mapping function. The mapping function i.e., ***map_dbl(input_vector, function)*** of **map** from the **purr** package, applies a given function to each element of a vector and returns a vector of the same length. Our input vector will be the `geometry` column of `hunan`, the function will be **st_centroid.**
+
+```{r}
+# [[1]] <- to get the longitude only, i.e., the first value in each centroid.
+longitude <- map_dbl(hunan$geometry, ~st_centroid(.x)[[1]])
+```
+
+```{r}
+# [[2]] <- to get the latitude only, i.e., the second value in each centroid.
+latitude <- map_dbl(hunan$geometry, ~st_centroid(.x)[[2]])
+```
+
+```{r}
+# To put both longitude and latitude in the same object.
+coords <- cbind(longitude, latitude)
+```
+
+```{r}
+# To pull the first 5 observations
+head(coords,n=5)
+```
+
+### 9.3.1 Plotting Queen contiguity based on neighbours map
+
+The code chuck below plots the Queen contiguity weight matrix (derived earlier) based on neighbours map.
+
+```{r}
+plot(hunan$geometry, border="lightgrey")
+plot(wm_q, coords, pch = 19, cex = 0.6, add = TRUE, col= "red")
+```
+
+### 9.3.2 Plotting Rook contiguity based on neighbours map
+
+The code chuck below plots the Rook contiguity weight matrix (derived earlier) based on neighbours map.
+
+```{r}
+plot(hunan$geometry, border="lightgrey")
+plot(wm_r, coords, pch = 19, cex = 0.6, add = TRUE, col= "red")
+```
+
+### 9.3.3 Plotting both Queen and Rook contiguity based on neighbours map
+
+The code chuck below plots both Queen and Rook contiguity weight matrices (derived earlier) based on neighbours map, side by side.
+
+```{r}
+par(mfrow=c(1,2))
+plot(hunan$geometry, border="lightgrey")
+plot(wm_q, coords, pch = 19, cex = 0.6, add = TRUE, col= "red", main="Queen Contiguity")
+plot(hunan$geometry, border="lightgrey")
+plot(wm_r, coords, pch = 19, cex = 0.6, add = TRUE, col = "red", main="Rook Contiguity")
+```
+
+## 10. Computing distance based neighbours
