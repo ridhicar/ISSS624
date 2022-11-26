@@ -1,0 +1,272 @@
+---
+title: "Take-home_Ex1: Global and Local Measures of Spatial Autocorrelation"
+author: "Ridhica Rangarajan"
+editor: visual
+---
+
+## 1. Overview
+
+This document covers the in-class exercise 1. In this exercise, we will learn how to compute spatial weights using R.
+
+## 2. Getting Started
+
+The code check below will install and load the relevant packages. **pacman** is a wrapper in R that helps us load and install packages.
+
+-   Functions of **tidyverse** can be used to perform data science tasks such as importing, wrangling, and visualizing data.
+
+-   Function of **readr** package (part of tidyverse) can be used to import csv files.
+
+-   ***st_read(dsn = "file path", layer = "file name")*** of **sf** package can be used to import geospatial data.
+
+-   Join function i.e., ***left_join(dataframe1, dataframe2)*** of **dplyr** can be used to perform relational join.
+
+-   ***poly2nb()*** of **spdep** can be used to compute spatial weights and to calculate spatially lagged variables.
+
+```{r}
+# same as:
+# library(pacman)
+# p_load(tidyverse, sf ,..)
+pacman::p_load(tidyverse, sf, tmap, spdep)
+```
+
+## 3. Importing Geospatial Data
+
+### 3.1. Importing polygon features
+
+This code chunk uses **st_read()** function of **sf** package to import Hunan county boundary layer ESRI shapefile into R as a polygon feature data frame.
+
+st_read() uses two arguments:
+
+-   `dsn`to define the data path
+
+-   `layer` to provide the shapefile name
+
+```{r}
+hunan_sf = st_read(dsn = "data/geospatial", 
+                  layer = "Hunan")
+```
+
+The message above reveals that the geospatial objects are multipolygon features. There are a total of 88 multipolygon features and 7 fields in `hunan` simple feature data frame. `hunan` is in **WGS 84** projected coordinates systems. The bounding box provides the x extend and y extend of the data.
+
+## 4. Checking the Content of A Simple Feature Data Frame
+
+### 4.1. Working with *st_geometry()*
+
+The column in the sf data.frame that contains the geometries is a list, of class `sfc`. We can retrieve the geometry list-column in this case by hunan\$geom or hunan\[\[1\]\], but the more general way uses *st_geometry()* as shown in the code chunk below.
+
+```{r}
+st_geometry(hunan_sf)
+```
+
+### 4.2. Working with glimpse()
+
+**glimpse()** report of **dplyr** reveals the data type of each fields. For example, `Shape Area` `Shape Length` fields are **double-precision values,** `ID_3` field is in **integer** data type.
+
+```{r}
+glimpse(hunan_sf)
+```
+
+### 4.3. Working with *head()*
+
+```{r}
+# To fetch the first 5 rows of hunan dataset.
+head(hunan_sf, n=5)
+```
+
+The below code chunk uses ***st_crs()*** of **sf** package pulls the coordinate system of `hunan_sf`.
+
+```{r}
+st_crs(hunan_sf)
+```
+
+`hunan_sf` data frame is projected in WGS 84, when we read until the end of the print, it indicates that the EPSG is 4326. This is the correct EPSG code for WGS 84, it should be [4326](https://support.virtual-surveyor.com/en/support/solutions/articles/1000261351-what-is-wgs84-#:~:text=The%20WGS84%20Coordinate%20Systems%20adds,EPSG%20code%2C%20which%20is%204326.). Hence, there is no need for correction, use of *st_set_crs()* of **sf** package.
+
+## 5. Plotting Geospatial Data
+
+The code chunk below pulls multi-plot of all attributes.
+
+```{r}
+plot(hunan_sf)
+```
+
+The code chunk below plots only the geometry.
+
+```{r}
+plot(st_geometry(hunan_sf))
+```
+
+## 6. Importing Attribute (Aspatial) Data in csv into R
+
+This code chunks below will import Dictionary.xlsx (optional) and Hunan_2012.csv into R. We will use ***read_csv()***of **readr** package to import Hunan_2012.csv. The output is R dataframe class called `hunan2012`.
+
+```{r}
+dict <- readxl::read_excel("/Users/ridz/ridhicar/ISSS624/In-class_Ex/In-class_Ex1/data/aspatial/Dictionary.xlsx")
+```
+
+```{r}
+hunan2012 <- read_csv("/Users/ridz/ridhicar/ISSS624/In-class_Ex/In-class_Ex1/data/aspatial/Hunan_2012.csv")
+```
+
+### 6.1 Working with *list()*
+
+The code chunk below shows ***list()*** of Base R instead of *glimpse()*, used to examine if the data file, `hunan2012` has been imported correctly.
+
+```{r}
+list(hunan2012)
+```
+
+The output reveals that `hunan2012` tibble data frame consists of 88 rows and 29 columns.\
+
+## 7. Performing relational join
+
+The code chunk below uses ***left_join(dataframe1, dataframe2)*** of **dplyr** package to create a new table `hunan`, joining the attribute table of hunan's SpatialPolygonsDataFrame with the attribute fields of hunan2012 dataframe.
+
+```{r}
+hunan <- left_join(hunan_sf, hunan2012)
+```
+
+## 8. Visualising Regional Development Indicator
+
+The code chunk below draws a chloropeth map showing the distribution of GDPPC 2012 by using ***qtm()*** of **tmap** package.
+
+```{r}
+equal <- tm_shape(hunan) +
+  tm_fill("GDPPC",
+          n = 5,
+          style = "equal") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(main.title = "Equal interval classification")
+
+quantile <- tm_shape(hunan) +
+  tm_fill("GDPPC",
+          n = 5,
+          style = "quantile") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(main.title = "Equal quantile classification")
+
+tmap_arrange(equal, 
+             quantile, 
+             asp=1, 
+             ncol=2)
+```
+
+## 9. Global Spatial Autocorrelation
+
+In this section, you will learn how to compute global spatial autocorrelation statistics and to perform spatial complete randomness test for global spatial autocorrelation.
+
+## 9. Computing Contiguity Spatial Weights
+
+We will use ***poly2nb()*** of **spdep** package to compute contiguity weight matrices for the study area. This function builds a neighbours list based on regions with contiguous boundaries.
+
+### 9.1 Computing (QUEEN) contiguity based on neighbours
+
+The code chunk below is used to compute the Queen contiguity weight matrix. The "queen" argument takes TRUE (default) or FALSE as option. The function will return a list of first order neighbours using the Queen criteria.
+
+```{r}
+wm_q <- poly2nb(hunan, queen=TRUE)
+summary(wm_q)
+```
+
+The summary report above shows that there are 88 area units in Hunan. The most connected area unit has 11 neighbours. There are two area units with only one heighbours.
+
+For each polygon in our polygon object, *wm_q* lists all neighboring polygons. For example, to see the neighbors for the 11th polygon in the object, type:
+
+```{r}
+wm_q[[11]]
+```
+
+Polygon 11 has 3 neighbors. The numbers represent the polygon IDs as stored in hunan SpatialPolygonsDataFrame class.
+
+Using the code chunk below, we can retrieve the county name of Polygon ID=11:
+
+```{r}
+hunan$County[11]
+```
+
+The output reveals that Polygon ID=11 is Guidong county.
+
+The code chunk below is used to reveal the county names of the three neighboring polygons:
+
+```{r}
+hunan$NAME_3[c(14,17,72)]
+```
+
+The code chunk below is used to retrieve the GDPPC of these three countries i.e., "Rucheng", "Zixing", "Yanling":
+
+```{r}
+# nb11 <- to see the neighbors for the 11th polygon in the object
+nb11 <- wm_q[[11]]
+# To retrieve the GPPPC of Polygon ID=11
+nb11 <- hunan$GDPPC[nb11]
+nb11
+```
+
+The printed output above shows that the GDPPC of the three nearest neighbours based on Queen's method are 11286, 65706 and 21021 respectively.
+
+Similarly, to see the neighbors for the first polygon in the object, type:
+
+```{r}
+wm_q[[1]]
+```
+
+Polygon 1 has 5 neighbors. The numbers represent the polygon IDs as stored in hunan SpatialPolygonsDataFrame class.
+
+The code chunk below retrieves the county name of Polygon ID=1:
+
+```{r}
+hunan$County[1]
+```
+
+The output reveals that Polygon ID=1 is Anxiang county.
+
+The code chunk below is used to reveal the county names of the five neighboring polygons:
+
+```{r}
+hunan$NAME_3[c(2,3,4,57,85)]
+```
+
+The code chunk below is used to retrieve the GDPPC of these three countries i.e., "Hanshou", "Jinshi", "Li", "Nan", "Taoyuan":
+
+```{r}
+# nb1 <- to see the neighbors for the first polygon in the object
+nb1 <- wm_q[[1]]
+# To retrieve the GPPPC of Polygon ID=1
+nb1 <- hunan$GDPPC[nb1]
+nb1
+```
+
+The printed output above shows that the GDPPC of the three nearest neighbours based on Queen's method are 20981, 34592, 24473, 21311 and 22879 respectively.
+
+The code chunk below displays the complete weight matrix by using ***str()***.
+
+```{r}
+str(wm_q)
+```
+
+### 9.2 Creating (ROOK) contiguity based on neighbours
+
+The code chunk below is used to compute Rook contiguity weight matrix. The "queen" argument takes TRUE (default) or FALSE as option. Setting "queen" to FALSE means Rook contiguity weight matrix.
+
+```{r}
+wm_r <- poly2nb(hunan, queen=FALSE)
+summary(wm_r)
+```
+
+The summary report above shows that there are 88 area units in Hunan. The most connect area unit has 10 neighbours. There are two area units with only one neighbours.
+
+### 10. Row-standardized weights matrix
+
+Next, we need to assign weights to each neighbouring polygon. In our case, each neighbouring polygon will be assigned equal weight (style="W"). This is accomplished by assigning the fraction 1/(#ofneighbors) to each neighboring county then summing the weighted income values. While this is the most intuitive way to summaries the neighbors' values it has one drawback in that polygons along the edges of the study area will base their lagged values on fewer polygons thus potentially over- or under-estimating the true nature of the spatial autocorrelation in the data. For this example, we'll stick with the style="W" option for simplicity's sake but note that other more robust options are available, notably style="B".
+
+The zero.policy=TRUE option allows for lists of non-neighbours. This should be used with caution as the user may not be aware of missing neighbours in his/her dataset However, a zero.policy = FALSE will return an error, see below.
+
+```{r}
+rswm_q <- nb2listw(wm_q, style="W", zero.policy = TRUE)
+rswm_q
+```
+
+The input of *nb2listw()* must be an object of class **nb**. The syntax of the function has two major arguments, namely style and zero.poly.
+
+-   *style* can take values \"W\", \"B\", \"C\", \"U\", \"minmax\" and \"S\". B is the basic binary coding, W is row standardised (sums over all links to n), C is globally standardised (sums over all links to n), U is equal to C divided by the number of neighbours (sums over all links to unity), while S is the variance-stabilizing coding scheme proposed by Tiefelsdorf et al. 1999, p. 167-168 (sums over all links to n).
+
+-   If *zero policy* is set to TRUE, weights vectors of zero length are inserted for regions without neighbour in the neighbours list. These will in turn generate lag values of zero, equivalent to the sum of products of the zero row t(rep(0, length=length(neighbours))) %\*% x, for arbitrary numerical vector x of length length(neighbours). The spatially lagged value of x for the zero-neighbour region will then be zero, which may (or may not) be a sensible choice.
