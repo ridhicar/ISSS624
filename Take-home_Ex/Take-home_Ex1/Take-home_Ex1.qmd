@@ -271,11 +271,11 @@ The input of *nb2listw()* must be an object of class **nb**. The syntax of the f
 
 -   If *zero policy* is set to TRUE, weights vectors of zero length are inserted for regions without neighbour in the neighbours list. These will in turn generate lag values of zero, equivalent to the sum of products of the zero row t(rep(0, length=length(neighbours))) %\*% x, for arbitrary numerical vector x of length length(neighbours). The spatially lagged value of x for the zero-neighbour region will then be zero, which may (or may not) be a sensible choice.
 
-## 11. Global Spatial Autocorrelation: Moran\'s I
+## 11.1 Global Spatial Autocorrelation: Moran\'s I
 
 In this section, we will learn how to perform Moran's I statistical testing by using ***moran.test()*** from **spdep** package.
 
-### 11.1 Maron's I test
+### 11.1.1 Maron's I test
 
 The code chunk below performs Moran's I statistical testing by using ***moran.test()*** from **spdep** package.
 
@@ -296,7 +296,7 @@ Moran I (Z value) is:
 
 The p-value from Moran's I test is less than 0.05, this means that the test is statistically significant, we will reject the null hypothesis.
 
-### 11.2 Computing Monte Carlo Moran\'s I
+### 11.1.2 Computing Monte Carlo Moran\'s I
 
 The code chunk below performs the permutation test on Moran's I statistic by using ***moran.mc()*** from **spdep** package. A total of 1000 stimulations will be performed.
 
@@ -312,7 +312,7 @@ bperm
 
 The p-value from Moran's I test is less than 0.05, we will reject the null hypothesis.
 
-### 11.3 Visualizing Monte Carlo Moran's I
+### 11.1.3 Visualizing Monte Carlo Moran's I
 
 The code chunks below examine the stimulated Moran's I test statistics.
 
@@ -363,3 +363,62 @@ ggplot(df, aes(x=bperm$res)) +
  geom_density(alpha=.2, fill="#FF6666") 
 p
 ```
+
+## 11.2 Global Spatial Autocorrelation: Geary\'s
+
+In this section, we will learn how to perform Geary's c statistical testing by using appropriate functions from **spdep** package.
+
+### 11.2.1 Geary's C test
+
+The code chunk below performs Geary's C test for spatial autocorrelation by using ***geary.test()*** from **spdep** package.
+
+```{r}
+geary.test(hunan$GDPPC, listw=rswm_q)
+```
+
+The p-value from Geary's C is less than 0.05, we will reject the null hypothesis.
+
+Geary C (Z value):
+
+-   Large c value i.e., \>1: Dispersed, observations tend to be dissimilar.
+
+-   small c value i.e., \<1: Clustered, observations tend to be similar.
+
+-   c = 1: observations are arranged randomly over space.
+
+### 11.2.1 Computing Monte Carlo Geary's C
+
+The code chunk below performs permutation test by Geary's C statistic by using ***geary.mc()*** from **spdep** package.
+
+```{r}
+set.seed(1234)
+bperm=geary.mc(hunan$GDPPC, 
+               listw=rswm_q, 
+               nsim=999)
+bperm
+```
+
+The p-value from Monte-Carlo stimulation of Geary's C is less than 0.05, we will reject the null hypothesis.
+
+### 11.2.3 Visualizing the Monte Carlo Geary's C
+
+The code chunks below are used to visualize the distribution of the stimulated values.
+
+```{r}
+mean(bperm$res[1:999])
+```
+
+```{r}
+var(bperm$res[1:999])
+```
+
+```{r}
+summary(bperm$res[1:999])
+```
+
+```{r}
+hist(bperm$res, freq=TRUE, breaks=20, xlab="Simulated Geary c")
+abline(v=1, col="red") 
+```
+
+The histogram is symmetrical with mean = 1.0.

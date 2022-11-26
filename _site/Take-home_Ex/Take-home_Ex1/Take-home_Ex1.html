@@ -219,11 +219,17 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <li><a href="#creating-rook-contiguity-based-on-neighbours" id="toc-creating-rook-contiguity-based-on-neighbours" class="nav-link" data-scroll-target="#creating-rook-contiguity-based-on-neighbours">9.2 Creating (ROOK) contiguity based on neighbours</a></li>
   </ul></li>
   <li><a href="#row-standardized-weights-matrix" id="toc-row-standardized-weights-matrix" class="nav-link" data-scroll-target="#row-standardized-weights-matrix">10. Row-standardized weights matrix</a></li>
-  <li><a href="#global-spatial-autocorrelation-morans-i" id="toc-global-spatial-autocorrelation-morans-i" class="nav-link" data-scroll-target="#global-spatial-autocorrelation-morans-i">11. Global Spatial Autocorrelation: Moran's I</a>
+  <li><a href="#global-spatial-autocorrelation-morans-i" id="toc-global-spatial-autocorrelation-morans-i" class="nav-link" data-scroll-target="#global-spatial-autocorrelation-morans-i">11.1 Global Spatial Autocorrelation: Moran's I</a>
   <ul class="collapse">
-  <li><a href="#marons-i-test" id="toc-marons-i-test" class="nav-link" data-scroll-target="#marons-i-test">11.1 Maron’s I test</a></li>
-  <li><a href="#computing-monte-carlo-morans-i" id="toc-computing-monte-carlo-morans-i" class="nav-link" data-scroll-target="#computing-monte-carlo-morans-i">11.2 Computing Monte Carlo Moran's I</a></li>
-  <li><a href="#visualizing-monte-carlo-morans-i" id="toc-visualizing-monte-carlo-morans-i" class="nav-link" data-scroll-target="#visualizing-monte-carlo-morans-i">11.3 Visualizing Monte Carlo Moran’s I</a></li>
+  <li><a href="#marons-i-test" id="toc-marons-i-test" class="nav-link" data-scroll-target="#marons-i-test">11.1.1 Maron’s I test</a></li>
+  <li><a href="#computing-monte-carlo-morans-i" id="toc-computing-monte-carlo-morans-i" class="nav-link" data-scroll-target="#computing-monte-carlo-morans-i">11.1.2 Computing Monte Carlo Moran's I</a></li>
+  <li><a href="#visualizing-monte-carlo-morans-i" id="toc-visualizing-monte-carlo-morans-i" class="nav-link" data-scroll-target="#visualizing-monte-carlo-morans-i">11.1.3 Visualizing Monte Carlo Moran’s I</a></li>
+  </ul></li>
+  <li><a href="#global-spatial-autocorrelation-gearys" id="toc-global-spatial-autocorrelation-gearys" class="nav-link" data-scroll-target="#global-spatial-autocorrelation-gearys">11.2 Global Spatial Autocorrelation: Geary's</a>
+  <ul class="collapse">
+  <li><a href="#gearys-c-test" id="toc-gearys-c-test" class="nav-link" data-scroll-target="#gearys-c-test">11.2.1 Geary’s C test</a></li>
+  <li><a href="#computing-monte-carlo-gearys-c" id="toc-computing-monte-carlo-gearys-c" class="nav-link" data-scroll-target="#computing-monte-carlo-gearys-c">11.2.1 Computing Monte Carlo Geary’s C</a></li>
+  <li><a href="#visualizing-the-monte-carlo-gearys-c" id="toc-visualizing-the-monte-carlo-gearys-c" class="nav-link" data-scroll-target="#visualizing-the-monte-carlo-gearys-c">11.2.3 Visualizing the Monte Carlo Geary’s C</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -761,10 +767,10 @@ W 88 7744 88 37.86334 365.9147</code></pre>
 </ul>
 </section>
 <section id="global-spatial-autocorrelation-morans-i" class="level2">
-<h2 class="anchored" data-anchor-id="global-spatial-autocorrelation-morans-i">11. Global Spatial Autocorrelation: Moran's I</h2>
+<h2 class="anchored" data-anchor-id="global-spatial-autocorrelation-morans-i">11.1 Global Spatial Autocorrelation: Moran's I</h2>
 <p>In this section, we will learn how to perform Moran’s I statistical testing by using <strong><em>moran.test()</em></strong> from <strong>spdep</strong> package.</p>
 <section id="marons-i-test" class="level3">
-<h3 class="anchored" data-anchor-id="marons-i-test">11.1 Maron’s I test</h3>
+<h3 class="anchored" data-anchor-id="marons-i-test">11.1.1 Maron’s I test</h3>
 <p>The code chunk below performs Moran’s I statistical testing by using <strong><em>moran.test()</em></strong> from <strong>spdep</strong> package.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="fu">moran.test</span>(hunan<span class="sc">$</span>GDPPC, </span>
@@ -794,7 +800,7 @@ Moran I statistic       Expectation          Variance
 <p>The p-value from Moran’s I test is less than 0.05, this means that the test is statistically significant, we will reject the null hypothesis.</p>
 </section>
 <section id="computing-monte-carlo-morans-i" class="level3">
-<h3 class="anchored" data-anchor-id="computing-monte-carlo-morans-i">11.2 Computing Monte Carlo Moran's I</h3>
+<h3 class="anchored" data-anchor-id="computing-monte-carlo-morans-i">11.1.2 Computing Monte Carlo Moran's I</h3>
 <p>The code chunk below performs the permutation test on Moran’s I statistic by using <strong><em>moran.mc()</em></strong> from <strong>spdep</strong> package. A total of 1000 stimulations will be performed.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
@@ -819,7 +825,7 @@ alternative hypothesis: greater</code></pre>
 <p>The p-value from Moran’s I test is less than 0.05, we will reject the null hypothesis.</p>
 </section>
 <section id="visualizing-monte-carlo-morans-i" class="level3">
-<h3 class="anchored" data-anchor-id="visualizing-monte-carlo-morans-i">11.3 Visualizing Monte Carlo Moran’s I</h3>
+<h3 class="anchored" data-anchor-id="visualizing-monte-carlo-morans-i">11.1.3 Visualizing Monte Carlo Moran’s I</h3>
 <p>The code chunks below examine the stimulated Moran’s I test statistics.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(bperm<span class="sc">$</span>res[<span class="dv">1</span><span class="sc">:</span><span class="dv">999</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -1910,6 +1916,91 @@ alternative hypothesis: greater</code></pre>
 <p><img src="Take-home_Ex1_files/figure-html/unnamed-chunk-33-4.png" class="img-fluid" width="672"></p>
 </div>
 </div>
+</section>
+</section>
+<section id="global-spatial-autocorrelation-gearys" class="level2">
+<h2 class="anchored" data-anchor-id="global-spatial-autocorrelation-gearys">11.2 Global Spatial Autocorrelation: Geary's</h2>
+<p>In this section, we will learn how to perform Geary’s c statistical testing by using appropriate functions from <strong>spdep</strong> package.</p>
+<section id="gearys-c-test" class="level3">
+<h3 class="anchored" data-anchor-id="gearys-c-test">11.2.1 Geary’s C test</h3>
+<p>The code chunk below performs Geary’s C test for spatial autocorrelation by using <strong><em>geary.test()</em></strong> from <strong>spdep</strong> package.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb74"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a><span class="fu">geary.test</span>(hunan<span class="sc">$</span>GDPPC, <span class="at">listw=</span>rswm_q)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Geary C test under randomisation
+
+data:  hunan$GDPPC 
+weights: rswm_q 
+
+Geary C statistic standard deviate = 3.6108, p-value = 0.0001526
+alternative hypothesis: Expectation greater than statistic
+sample estimates:
+Geary C statistic       Expectation          Variance 
+        0.6907223         1.0000000         0.0073364 </code></pre>
+</div>
+</div>
+<p>The p-value from Geary’s C is less than 0.05, we will reject the null hypothesis.</p>
+<p>Geary C (Z value):</p>
+<ul>
+<li><p>Large c value i.e., &gt;1: Dispersed, observations tend to be dissimilar.</p></li>
+<li><p>small c value i.e., &lt;1: Clustered, observations tend to be similar.</p></li>
+<li><p>c = 1: observations are arranged randomly over space.</p></li>
+</ul>
+</section>
+<section id="computing-monte-carlo-gearys-c" class="level3">
+<h3 class="anchored" data-anchor-id="computing-monte-carlo-gearys-c">11.2.1 Computing Monte Carlo Geary’s C</h3>
+<p>The code chunk below performs permutation test by Geary’s C statistic by using <strong><em>geary.mc()</em></strong> from <strong>spdep</strong> package.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb76"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
+<span id="cb76-2"><a href="#cb76-2" aria-hidden="true" tabindex="-1"></a>bperm<span class="ot">=</span><span class="fu">geary.mc</span>(hunan<span class="sc">$</span>GDPPC, </span>
+<span id="cb76-3"><a href="#cb76-3" aria-hidden="true" tabindex="-1"></a>               <span class="at">listw=</span>rswm_q, </span>
+<span id="cb76-4"><a href="#cb76-4" aria-hidden="true" tabindex="-1"></a>               <span class="at">nsim=</span><span class="dv">999</span>)</span>
+<span id="cb76-5"><a href="#cb76-5" aria-hidden="true" tabindex="-1"></a>bperm</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Monte-Carlo simulation of Geary C
+
+data:  hunan$GDPPC 
+weights: rswm_q 
+number of simulations + 1: 1000 
+
+statistic = 0.69072, observed rank = 1, p-value = 0.001
+alternative hypothesis: greater</code></pre>
+</div>
+</div>
+<p>The p-value from Monte-Carlo stimulation of Geary’s C is less than 0.05, we will reject the null hypothesis.</p>
+</section>
+<section id="visualizing-the-monte-carlo-gearys-c" class="level3">
+<h3 class="anchored" data-anchor-id="visualizing-the-monte-carlo-gearys-c">11.2.3 Visualizing the Monte Carlo Geary’s C</h3>
+<p>The code chunks below are used to visualize the distribution of the stimulated values.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb78"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(bperm<span class="sc">$</span>res[<span class="dv">1</span><span class="sc">:</span><span class="dv">999</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 1.004402</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb80"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a><span class="fu">var</span>(bperm<span class="sc">$</span>res[<span class="dv">1</span><span class="sc">:</span><span class="dv">999</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.007436493</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb82"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb82-1"><a href="#cb82-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(bperm<span class="sc">$</span>res[<span class="dv">1</span><span class="sc">:</span><span class="dv">999</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.7142  0.9502  1.0052  1.0044  1.0595  1.2722 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb84"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(bperm<span class="sc">$</span>res, <span class="at">freq=</span><span class="cn">TRUE</span>, <span class="at">breaks=</span><span class="dv">20</span>, <span class="at">xlab=</span><span class="st">"Simulated Geary c"</span>)</span>
+<span id="cb84-2"><a href="#cb84-2" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">v=</span><span class="dv">1</span>, <span class="at">col=</span><span class="st">"red"</span>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Take-home_Ex1_files/figure-html/unnamed-chunk-39-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>The histogram is symmetrical with mean = 1.0.</p>
 
 
 </section>
