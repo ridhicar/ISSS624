@@ -1,0 +1,734 @@
+---
+title: "Take-home_Ex1"
+format: html
+editor: visual
+---
+
+## Getting Started
+
+In this section, we will import all the required R packages from CRAN. They are:
+
+-   **sf** for importing, managing, and processing geospatial data.
+
+-   **tmap** for plotting using *qtm()* and customising thematic map using tmap elements.
+
+-   **spdep** for computing spatial weights and spatially lagged variables.
+
+-   **sqldf** for filtering while import.
+
+-   **tidyverse** for performing data science tasks such as importing, wrangling, and visualizing data.
+
+Tidyverse consists of a family of R packages. In this hands-on exercise, the following packages will be used:
+
+-   **readr** for importing csv data,
+
+-   **readxl** for importing Excel worksheet,
+
+-   **tidyr** for manipulating and tidying data,
+
+-   **dplyr** for transforming/wrangling data, and
+
+-   **ggplot2** for visualising data
+
+The code chunk below uses *p_load()* functionof **pacman** package to install and load the respective packages into R environment:
+
+```{r}
+pacman::p_load(sf, spdep, tmap, tidyverse, knitr)
+```
+
+## Importing Geospatial Data
+
+In this section, we will import the following geospatial data into R by using *st_read()* of **sf** package as a polygon feature data frame. To assign 26391 EPSG code to `gb` data frame, *st_tranform()* of **sf** is used as shown in code chunk below.
+
+```{r}
+#gb <- st_read(
+#  dsn = "data/geospatial/geoBoundaries-NGA-ADM2-all", layer = #"geoBoundaries-NGA-ADM2", crs = 4326)
+
+gb <- read_rds("/Users/ridz/ridhicar/ISSS624/Take-home_Ex/Take-home_Ex1/data/sandbox/gbi.rds")
+
+gb <- gb %>%
+  st_transform(crs = 26391)
+```
+
+```{r}
+# Transforming original file to rds file and then re-importing it
+# gb <- write_rds(gb, "/Users/ridz/ridhicar/ISSS624/Take-home_Ex/Take-home_Ex1/data/sandbox/gbi.rds")
+```
+
+```{r}
+st_crs(gb)
+```
+
+The message above reveals that the geospatial objects are multipolygon features. There are a total of 774 multipolygon features and 5 fields in `gb` simple feature data frame. `gb` is in **wgs84** projected coordinates systems. The bounding box provides the x extend and y extend of the data.
+
+## Importing and Converting Aspatial Data
+
+In this section, we will import the following aspatial data into R by using *st_read()* of **sf** package as a polygon feature data frame. Using the csv version of the file, we were able to identify the key variables, i.e., `wp$clean_coun, wp$clean_adm2, wp$status_cle, wp$lat_deg, wp$lon_deg`. To assign 26391 EPSG code to wp data frame, *st_tranform()* of **sf** is used as shown in code chunk below.
+
+```{r}
+#wp <- st_read(dsn = "data/aspatial/Water Point Data Exchange - Plus (WPdx+)", layer = "geo_export"
+#            ) %>% filter(clean_coun == "Nigeria") %>%
+  # Exclude clean_coun from data frame since column will always show "Nigeria" only
+#  select(clean_adm2, status_cle, lat_deg, lon_deg)
+# Tranform data to appropriate projected CRS
+# wp <- st_transform(wp, coords = c("lat_deg", "lon_deg"), crs = 26391)
+# Rename columns in original data frame
+# wp <- wp %>% rename("status"="status_cle",
+#         "lat"="lat_deg",
+#         "lon"="lon_deg"
+#         )
+
+wp <- read_rds("/Users/ridz/ridhicar/ISSS624/Take-home_Ex/Take-home_Ex1/data/sandbox/wp.rds")
+```
+
+```{r}
+# Transforming original file to rds file and then re-importing it
+# wp <- write_rds(wp, "/Users/ridz/ridhicar/ISSS624/Take-home_Ex/Take-home_Ex1/data/sandbox/wp.rds")
+```
+
+The message above reveals that there are a total of 95008 features and 4 fields in `wp` linestring feature data frame and it is in **wgs84** projected coordinates system.
+
+```{r}
+# wp <- read_csv("data/aspatial/Water_Point_Data_Exchange_-_Plus__WPdx__all.csv") %>% filter(clean_coun == "Nigeria")
+```
+
+## Data Wrangling
+
+### Checking and replacing N/A values in 'status'
+
+Since our primary focus is the status of each water point, we need to take a look at the variable `'status'`. It would be very problematic if there are empty values. If yes, we will need to re-code the N/A values into "Unknown".
+
+The code chunk below adds up all the cells where column `'status'` return TRUE from the *is.na()* function.
+
+```{r}
+sum(is.na(wp$status))
+```
+
+The result above tells us that there are 10656 records where `'status_cle'` is set to "N/A". That is a alot, about 11% of the dataset!
+
+The code chunk below uses *mutate(),* from **dyplr** library, to replace the 'N/A' values in `'status_cle'`column with "Unknown" using *replace_na()*.
+
+```{r}
+wp <- wp %>% mutate(status = replace_na(status, "Unknown"))
+```
+
+The code chunk below verifies if there are any more N/A values using the previous code chunk.
+
+```{r}
+sum(is.na(wp$status))
+```
+
+### Replacing value in 'status' for Non-Functional Versus Non functional
+
+When we use *unique()* for status column, we notice that `Non functional due to dry season` versus `Non-functional due to dry season` are **incorrectly identified as two different categories** because of the difference in hyphen. In reality, they mean the same thing! Therefore, we can amend cells with value `Non functional due to dry season` to `Non-Functional due to dry season` to get more accurate frequency distribution of the water tap statuses.
+
+```{r}
+# To get the unique values in status column.
+# Notice value: "Non functional due to dry season" versus "Non-Functional due to dry season"
+# They are incorrectly categorised 
+unique(wp$status)
+```
+
+```{r}
+# Replace string with another string on a single column
+wp$status[wp$status =='Non functional due to dry season'] <- 'Non-Functional due to dry season'
+```
+
+```{r}
+unique(wp$status)
+```
+
+The result above shows we have successfully changed all `Non functional due to dry season` to `Non-Functional due to dry season`!
+
+### Replacing value in 'status' for Abandoned Versus Abandoned/Decommissioned
+
+Similarly, when we use *unique()* for status column, we notice that `Abandoned` versus `Abandoned/Decommissioned` are **incorrectly identified as two different categories**. In reality, they `Abandoned` should be a subset of `Abandoned/Decommissioned`! Therefore, we can amend cells with value `Abandoned` to `Abandoned/Decommissioned` to get more accurate frequency distribution of the water tap statuses.
+
+```{r}
+# Replace string with another string on a single column
+wp$status[wp$status =='Abandoned'] <- 'Abandoned/Decommissioned'
+```
+
+```{r}
+unique(wp$status)
+```
+
+The result above shows we have successfully clubbed all `Abandoned` to `Abandoned/Decommissioned`!
+
+### Checking and Removing duplicate area name
+
+The code chunk below first orders the `gb` data frame in ascending order (default) based on the `shapeName`. We then use *duplicated()* to retrieve all area names that are duplicated and store them in a `duplicate_area`.
+
+```{r}
+# unique(gb$shapeName)
+gb <- (gb[order(gb$shapeName),])
+duplicate_area <- gb$shapeName[ gb$shapeName %in% gb$shapeName[duplicated(gb$shapeName)] ]
+
+duplicate_area
+```
+
+The result above tells us that there are **12** area names that are duplicated.
+
+Next, we will use the interactive viewer of **tmap** library to check the location of each of these duplicated area names. We can retrieve the actual name and the state of the areas [online]{.underline}.
+
+The code chunk below visualizes the location of each of the duplicated area names on the map.
+
+```{r}
+tmap_mode("view")
+
+tm_shape(gb[gb$shapeName %in% duplicate_area,]) +
+  tm_polygons()
+```
+
+```{r}
+gb$shapeName[c(94,95,304,305,355,356,519,546,547,693,694)] <- c("Bassa (Kogi)","Bassa (Plateau)",
+                                                                               "Ifelodun (Kwara)","Ifelodun (Osun)",
+                                                                               "Irepodun (Kwara)","Irepodun (Osun)",
+                                                                               "Nassarawa","Obi (Benue)","Obi(Nasarawa)",
+                                                                               "Surulere (Lagos)","Surulere (Oyo)")
+
+length((gb$shapeName[gb$shapeName %in% gb$shapeName[duplicated(gb$shapeName)] ]))
+```
+
+### Exploratory Data Analysis (EDA): Visualizing of Water Tap Status Distribution (Part 1)
+
+```{r}
+# To plot bar chart with frequency of water tap status in data frame in ascending order
+ggplot(data = wp, mapping = aes(x = fct_rev(fct_infreq(status)))) +
+  # Hide legend
+  geom_bar(aes(fill = status), show.legend = FALSE) +
+    labs(title = "Distribution of Water Tap Status in Nigeria",
+      x = "Status",
+      y = "Frequency") +
+  # Rotate x labels or categories 90 degrees
+  theme(axis.text.x = element_text(angle=90)) +
+  # Label the bars with frrequency/count
+    geom_text(stat = 'count',
+           aes(label= paste0(stat(count))), size=3)
+```
+
+### Extracting Functional, Non-Functional, and Unknown Status of Water Points
+
+Since the focus of our analysis is on the functionality of water taps in Nigeria, we need to segregate/extract the number of **functional versus non-functional water taps** from orginal `wp` data frame using the `status` column. Based on the EDA above, we have **7** unique statuses as follows:
+
+1.  **Non-Functional** due to dry season
+
+2.  Abandoned/Decommissioned
+
+3.  **Functional** but not in use
+
+4.  **Functional** but needs repair
+
+5.  **Unknown**
+
+6.  **Non-Functional**
+
+7.  **Functional**
+
+We can group the values and save them into three new data frames, i.e., *Functional, Non-Functional and Unknown.* For the purpose of this analysis, we assume that status "Abandoned/Decommissioned' falls under Non-Functional.
+
+The code chunks below uses *filter()* from **dplyr** to select the specific records with different water tap statuses.
+
+```{r}
+wp_f <- wp %>%
+  filter(status %in%
+           c("Functional", 
+             "Functional but not in use",
+             "Functional but needs repair"))
+glimpse(wp_f)
+```
+
+```{r}
+wp_nf <- wp %>%
+  filter(status %in%
+           c("Abandoned/Decommissioned", 
+             "Non-Functional",
+             "Non-Functional due to dry season"))
+glimpse(wp_nf)
+```
+
+```{r}
+wp_u <- wp %>%
+  filter(status == "Unknown")
+glimpse(wp_u)
+```
+
+### **Performing point-in-polygon count**
+
+We can see where the individual water points overlap with the polygons (LGAs) to determine regional data. *st_intersects()* returns true if two geometries intersect, meaning if the water point overlaps with the polygon, it will return true. *lengths()* will give us the exact number of true values returned from *st_intersects()*.
+
+The new columns are then added to our original boundary data `gb` which will dictate the count of `Total`, `Functional`, `Non-Functional`, and `Unknown` water points per polygon.
+
+```{r}
+gb <- gb %>% 
+  mutate(`total_wp` = lengths(
+    st_intersects(gb, wp))) %>%
+  mutate(`wp_func` = lengths(
+    st_intersects(gb, wp_f))) %>%
+  mutate(`wp_nonfunc` = lengths(
+    st_intersects(gb, wp_nf))) %>%
+  mutate(`wp_unknown` = lengths(
+    st_intersects(gb, wp_u)))
+```
+
+### Computing the Percentage of Functional and Non-Functional Water Points
+
+Not all regions are equal in size, it is not fair to compare the number of water points in smaller regions to that of a bigger region, it is like comparing water content of an apple to a watermelon! A larger region may simply have more water points because of its area but in reality, this may not necessarily be the case. To conduct a more accurate analysis, we should standardize the metric by computing the **percentage** of `Functional` versus `Non-Functional` water points for each area.
+
+The code chunk below helps us to calculate the overall percentage of `Functional` versus `Non-Functional` water points.
+
+```{r}
+gb <- gb %>%
+  mutate(pct_func = `wp_func`/`total_wp`*100) %>%
+  mutate(`pct_nonfunc` = `wp_nonfunc`/`total_wp`*100)
+```
+
+We have 13 records with NaN values for `pct_func` and `pct_nonfunc`. This is because some regions do not have water points or their data is not recorded. We can simply replace these values with 0 using *replace()* as shown below*.*
+
+```{r}
+sum(is.na(gb$pct_func))
+sum(is.na(gb$pct_nonfunc))
+```
+
+```{r}
+gb <- gb %>% 
+  mutate(pct_func = replace_na(pct_func, 0)) %>% 
+  mutate(pct_nonfunc = replace_na(pct_nonfunc, 0))
+```
+
+```{r}
+sum(is.na(gb$pct_func))
+sum(is.na(gb$pct_nonfunc))
+```
+
+The results above shows we have successfully replaced all Nan values to 0.
+
+### Saving the Amended Data Frames into RDS files
+
+We can save the amended data tables into RDS files. RDS files are data files native to R, they help to manage of data efficiently.
+
+```{r}
+write_rds(gb, "data/sandbox/gb.rds")
+write_rds(wp_f, "data/sandbox/wb_f.rds")
+write_rds(wp_nf, "data/sandbox/wb_nf.rds")
+write_rds(wp_u, "data/sandbox/wb_u.rds")
+```
+
+## Exploratory Data Analysis (EDA): Mapping Functional versus Non-Functional Water Points (Part 2)
+
+The code chunk plots a histogram to reveal the distribution percentage of Functional Water Point. Conventionally, *hist()* of R Graphics will be used as shown in the code chunk below.
+
+```{r}
+hist(gb$pct_func)
+```
+
+The code chunk plots a histogram to reveal the distribution percentage of Non-Functional Water Point. Conventionally, *hist()* of R Graphics will be used as shown in the code chunk below.
+
+### **Histograms of Functional versus Non-Functional Water Point (%)**
+
+```{r}
+hist(gb$pct_nonfunc)
+```
+
+### **Choropleth Mapping Geospatial Data Using tmap**
+
+The code chunks below plots thematic maps using **tmap**, using *qtm()*, to show distribution of functional and non-functional water point percentages.
+
+```{r}
+# Functional
+pct_func.map <- qtm(gb, fill = "pct_func", fill.palette = "Blues", fill.title = "Percentage (%)", borders = "black", title = "Distribution of Functional Water Points (%)") + tm_legend(legend.height = 1)
+```
+
+```{r}
+# Non-Functional
+pct_nonfunc.map <- qtm(gb, fill = "pct_nonfunc", fill.palette = "Blues", fill.title = "Percentage (%)", borders = "black", title = "Distribution of Non-Functional Water Points (%)") + tm_legend(legend.height = 1)
+```
+
+```{r}
+tmap_arrange (pct_func.map, pct_nonfunc.map, ncol = 2, asp = 1)
+```
+
+### Insights from Chloropeth Map
+
+Northern region has relatively higher percentage of `Functional` water points than southern region. In contrast, Southern region has relatively higher percentage of `Non-Functional` water points than Northern region.
+
+Do we focus on repairing the water taps Southern region? Are there any other regions that require fixing? What about the unknowns? We will now conduct geospatial analysis to support or reject insights gathered from the choropleth map.
+
+## Geospatial Autocorrelation
+
+Spatial autocorrelation describes the presence of spatial autocorrelation between certain feature locations and values. Using different spatial autocorrelation statistical measures, we can determine whether the expressed pattern is completely random or clustered or scattered.
+
+### **Getting the centroids**
+
+The first step is to retrieve the centroid for each area. To retrieve the centroid of each area, we will use the *st_centroid()* function. The *st_centroid()* function will create a spatial data frame containing all the centroids calculated using *st_geometry().*
+
+```{r}
+coords <- st_centroid(st_geometry(gb))
+coords
+```
+
+### **Determine the cut-off distance for fixed distance weight matrix**
+
+In this section, we need to determine the upper limit for distance band by using the steps below:
+
+-   Return a matrix with the indices of points belonging to the set of the k nearest neighbours of each other by using [*knearneigh()*](https://r-spatial.github.io/spdep/reference/knearneigh.html) of **spdep**.
+
+-   Convert the knn object returned by *knearneigh()* into a neighbours list of class nb with a list of integer vectors containing neighbour region number ids by using [*knn2nb()*](https://r-spatial.github.io/spdep/reference/knn2nb.html).
+
+-   Return the length of neighbour relationship edges by using [*nbdists()*](https://r-spatial.github.io/spdep/reference/nbdists.html) of **spdep**. The function returns in the units of the coordinates if the coordinates are projected, in km otherwise.
+
+-   Remove the list structure of the returned object by using [**unlist()**](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/unlist).
+
+```{r}
+#coords <- coordinates(hunan)
+k1 <- knn2nb(knearneigh(coords))
+k1dists <- unlist(nbdists(k1, coords))
+summary(k1dists)
+```
+
+The summary report shows that the largest first nearest neighbour distance is 73\* km, so using this as the upper threshold gives certainty that all units will have at least one neighbour.
+
+### Computing fixed distance weight matrix
+
+Now, we will compute the distance weight matrix by using [*dnearneigh()*](https://r-spatial.github.io/spdep/reference/dnearneigh.html) as shown in the code chunk below
+
+```{r}
+wm_d73 <- dnearneigh(coords, 0, 73)
+wm_d73
+```
+
+The result above shows that we have 0 neighbours per region based on the distance based weight matrix.
+
+Next, *nb2listw()* is used to convert the nb object into spatial weights object
+
+```{r}
+# wm73_lw <- nb2listw(wm_d73, style = 'B')
+# summary(wm73_lw)
+```
+
+### Computing adaptive distance weight matrix
+
+One of the characteristics of fixed distance weight matrix is that more densely settled areas (usually the urban areas) tend to have more neighbours and the less densely settled areas (usually the rural counties) tend to have lesser neighbours. Having many neighbours smoothes the neighbour relationship across more neighbours.
+
+It is possible to control the numbers of neighbours directly using k-nearest neighbours, either accepting asymmetric neighbours or imposing symmetry as shown in the code chunk below.
+
+```{r}
+knn <- knn2nb(knearneigh(coords, k=8))
+knn
+```
+
+Next, *nb2listw()* is used to convert the nb object into spatial weights object.
+
+```{r}
+knn_lw <- nb2listw(knn, style = 'B')
+summary(knn_lw)
+```
+
+### Visualizing the Weight Matrices Adaptive versus Fixed
+
+In this section, we will visualize the areas with their respective neighbours after assignment based on the various methods.
+
+The left graph with the red lines show the adaptive distance with 8 neighbours and the right graph with the black lines show the links of neighbours within the cut-off distance of the above threshold.
+
+```{r}
+par(mfrow=c(1,2))
+plot(gb$geometry, border="lightgrey", main="Adaptive Distance (8)")
+plot(knn, coords, add=TRUE, col="red", pch = 19, cex = 0.1, length =0.08)
+plot(gb$geometry, border="lightgrey", main="Fixed Distance")
+plot(wm_d73, coords, add=TRUE, pch = 19, cex = 0.1)
+```
+
+## **Global Spatial Autocorrelation: Moran's I**
+
+In this section, we will perform Moran's I statistics testing by using [*moran.test()*](https://r-spatial.github.io/spdep/reference/moran.test.html) of **spdep** on both functional and non-functional water point percentage.
+
+```{r}
+moran.test(gb$pct_nonfunc, 
+           listw=knn_lw, 
+           zero.policy = TRUE, 
+           na.action=na.omit)
+```
+
+Based on results above, the p-value is less then 2.2e-16, which is below significance level 0.05, dictates that we can **reject** the null hypothesis stating that the variable `pct_nonfunc` is randomly distributed and do not depend on each other. The Moran I value of 0.4617 being statistically significant and positive dictates that `pct_nonfunc` values are clustered similarly.
+
+```{r}
+moran.test(gb$pct_func, 
+           listw=knn_lw, 
+           zero.policy = TRUE, 
+           na.action=na.omit)
+```
+
+Similarly, based on results above, the p-value is less then 2.2e-16, which is below significance level 0.05, dictates that we can **reject** the null hypothesis stating that the variable `pct_func` is randomly distributed and do not depend on each other. The Moran I value of 0.5274 being statistically significant and positive dictates that `pct_func` values are clustered similarly.
+
+### Exploratory Data Analysis (EDA) for Monte Carlo Moran's I (Part 3)
+
+Spatial correlograms are great to examine patterns of spatial autocorrelation in your data or model residuals. They show how correlated are pairs of spatial observations when you increase the distance (lag) between them - they are plots of some index of autocorrelation (Moran's I or Geary's c) against distance. Although correlograms are not as fundamental as variograms (a keystone concept of geostatistics), they are very useful as an exploratory and descriptive tool. For this purpose they actually provide richer information than variograms.
+
+#### Compute Moran's I correlogram
+
+In the code chunk below, [*sp.correlogram()*](https://r-spatial.github.io/spdep/reference/sp.correlogram.html) of **spdep** package is used to compute a 6-lag spatial correlogram of GDPPC. The global spatial autocorrelation used in Moran's I. The **plot()** of base Graph is then used to plot the output.
+
+```{r}
+MI_corr_fun <- sp.correlogram(knn, 
+                          gb$pct_func, 
+                          order=6, 
+                          method="I", 
+                          style="W")
+
+
+MI_corr_nonfun <- sp.correlogram(knn, 
+                          gb$pct_nonfunc, 
+                          order=6, 
+                          method="I", 
+                          style="W")
+
+par(mfrow=c(1,2))
+plot(MI_corr_fun, main = "Functional")
+plot(MI_corr_nonfun, main = "Non-Functional")
+```
+
+By plotting the output might not allow us to provide complete interpretation. This is because not all autocorrelation values are statistically significant. Hence, it is important for us to examine the full analysis report by printing out the analysis results as in the code chunk below.
+
+```{r}
+print(MI_corr_fun)
+```
+
+```{r}
+print(MI_corr_nonfun)
+```
+
+## Cluster and Outlier Analysis
+
+Local Indicators of Spatial Association or LISA are statistics that evaluate the existence of clusters in the spatial arrangement of a given variable. For instance if we are studying cancer rates among census tracts in a given city local clusters in the rates mean that there are areas that have higher or lower rates than is to be expected by chance alone; that is, the values occurring are above or below those of a random distribution in space.
+
+In this section, we will apply appropriate Local Indicators for Spatial Association (LISA), especially local Moran'I to detect cluster and/or outlier.
+
+### Computing local Moran's I
+
+To compute local Moran's I, the [*localmoran()*](https://r-spatial.github.io/spdep/reference/localmoran.html) function of **spdep** will be used. It computes *Ii* values, given a set of *zi* values and a listw object providing neighbour weighting information for the polygon associated with the zi values.
+
+The code chunks below are used to compute local Moran's I of *GDPPC2012* at the county level.
+
+```{r}
+fips <- order(gb$shapeName)
+localMI_nonfunc <- localmoran(gb$pct_nonfunc, knn_lw)
+localMI_func <- localmoran(gb$pct_func, knn_lw)
+head(localMI_func,3)
+```
+
+### **Mapping the local Moran's I**
+
+We have to combine the local Moran's data frame with the our exisiting `gb` spatial data frame before plotting. We will use the [*cbind()*](https://rdrr.io/r/base/cbind.html) function.
+
+```{r}
+gb_localMI_nonfunc <- cbind(gb,localMI_nonfunc) %>%
+  rename(Pr.Ii = Pr.z....E.Ii..)
+
+gb_localMI_func <- cbind(gb,localMI_func) %>%
+  rename(Pr.Ii.fun = Pr.z....E.Ii..)
+```
+
+### Visualization of Local Moran's I
+
+We will now visualize the Local Moran I's values using **plot**.
+
+The code chunk below plots the scatter plot based on the variables derived above.
+
+```{r}
+par(mfrow=c(2,1))
+
+gb$Z.pct_func <- scale(gb$pct_func) %>% as.vector
+gb$Z.pct_nonfunc <- scale(gb$pct_nonfunc) %>% as.vector
+
+ncif <- moran.plot(gb$pct_func, knn_lw,
+                   labels=as.character(gb$shapeName),
+                   xlab="Z-functional waterpoints", 
+                   ylab="Spatially Lag Z-functional waterpoints")
+
+nci_nf <- moran.plot(gb$pct_nonfunc, knn_lw,
+                   labels=as.character(gb$shapeName),
+                   xlab="Z-Non-functional waterpoints", 
+                   ylab="Spatially Lag Z-Non-functional waterpoints")
+```
+
+## LISA Maps
+
+#### **`'pct_nonfunctional'`**
+
+The code chunk below prepares the LISA cluster map. The function *lag.listw()* uses the first argument, the spatial weights matrix, to create a spatially lagged variable of the second argument. The next code snippet following centers the lagged variable.
+
+The Moran scatterplot is divided into four areas, with each quadrant corresponding with one of four categories:
+
+1.  High-High (HH) in the top-right quadrant;
+
+2.  High-Low (HL) in the bottom right quadrant;
+
+3.  Low-High (LH) in the top-left quadrant;
+
+4.  Low-Low (LL) in the bottom left quadrant
+
+```{r}
+gb.localMI_func <- cbind(gb,localMI_func) %>% rename(Pr.Ii = Pr.z....E.Ii..)
+gb.localMI_nonfunc <- cbind(gb,localMI_nonfunc) %>% rename(Pr.Ii = Pr.z....E.Ii..)
+```
+
+```{r}
+quadrant <- vector(mode="numeric",length=nrow(localMI_func))
+signif <- 0.05 
+
+# Functional 
+gb$lag_pct_func <- lag.listw(knn_lw, gb$pct_func)
+
+DV <- gb$lag_pct_func - mean(gb$lag_pct_func)  
+
+LM_I <- localMI_func[,1]   
+
+quadrant[DV <0 & LM_I>0] <- 1
+quadrant[DV >0 & LM_I<0] <- 2
+quadrant[DV <0 & LM_I<0] <- 3  
+quadrant[DV >0 & LM_I>0] <- 4    
+quadrant[localMI_func[,5]>signif] <- 0
+
+
+gb_localMI_func$quadrant <- quadrant
+
+# Non-Functional
+
+gb$lag_pct_nonfunc <- lag.listw(knn_lw, gb$pct_nonfunc)
+
+DV <- gb$lag_pct_nonfunc - mean(gb$lag_pct_nonfunc)  
+
+LM_I <- localMI_nonfunc[,1]   
+
+quadrant[DV <0 & LM_I>0] <- 1
+quadrant[DV >0 & LM_I<0] <- 2
+quadrant[DV <0 & LM_I<0] <- 3  
+quadrant[DV >0 & LM_I>0] <- 4    
+quadrant[localMI_nonfunc[,5]>signif] <- 0
+
+
+gb_localMI_nonfunc$quadrant <- quadrant
+```
+
+```{r}
+#colors <- c("#ffffff", "#2c7bb6", "#abd9e9", "#fdae61", "#d7191c")
+#clusters <- c("insignificant", "low-low", "low-high", "high-low", "high-high")
+
+#lisa_func.map <- tm_shape(gb.localMI_func) +
+#  tm_fill(col = "quadrant", 
+#          style = "cat", 
+#          palette = colors[c(sort(unique(quadrant#)))+1], 
+#          labels = clusters[c(sort(unique(quadrant)))+1],
+#          popup.vars = c("")) +
+#  tm_view(set.zoom.limits = c(11,17)) +
+#  tm_borders(alpha=0.5) + tm_layout(main.title = "Functional Water Points(%)", main.title.size = 0.8)
+```
+
+```{r}
+#colors <- c("#ffffff", "#2c7bb6", "#abd9e9", "#fdae61", "#d7191c")
+#clusters <- c("insignificant", "low-low", "low-high", "high-low", "high-high")
+
+#lisa_nonfunc.map <- tm_shape(gb.localMI_nonfunc) +
+#  tm_fill(col = "quadrant", 
+#          style = "cat", 
+#          palette = colors[c(sort(unique(quadrant)))+1], 
+#          labels = clusters[c(sort(unique(quadrant)))+1],
+#          popup.vars = c("")) +
+#  tm_view(set.zoom.limits = c(11,17)) +
+#  tm_borders(alpha=0.5)+ tm_layout(main.title = "Non-Functional Water Points (%)", main.title.size = 0.8)
+  
+```
+
+```{r}
+#tmap_arrange(lisa_func.map, lisa_nonfunc.map, asp=1, ncol=2)
+```
+
+The spatial distribution of functional water points are **positively** autocorrelated in the North whereas spatial distribution of non-functional water points are positively autocorrelated in parts of south east, west and central part of the nation.
+
+## Hot Spot and Cold Spot Area Analysis
+
+Beside detecting cluster and outliers, localised spatial statistics can be also used to detect hot spot and/or cold spot areas.
+
+The term 'hot spot' has been used generically across disciplines to describe a region or value that is higher relative to its surroundings (Lepers et al 2005, Aben et al 2012, Isobe et al 2015).
+
+### Getis and Ord's G-Statistics
+
+An alternative spatial statistics to detect spatial anomalies is the Getis and Ord's G-statistics (Getis and Ord, 1972; Ord and Getis, 1995). It looks at neighbours within a defined proximity to identify where either high or low values clutser spatially. Here, statistically significant hot-spots are recognised as areas of high values where other areas within a neighbourhood range also share high values too.
+
+#### Computing Gi statistics
+
+The code chunk below is used to compute the Gi statistics i.e, the second step of the hot and cold spots analysis. This is performed for both functional and non-functional water points using the adaptive distance weight matrix, derived in previsious section i.e., knn_lw.
+
+```{r}
+fips <- order(gb$shapeName)
+gi.nfadaptive <- localG(gb$wp_nonfunc, knn_lw)
+gb_nf.gi <- cbind(gb, as.matrix(gi.nfadaptive)) %>%
+  rename(gstatnf_adaptive = as.matrix.gi.nfadaptive.)
+
+
+gi.fadaptive <- localG(gb$wp_func, knn_lw)
+gb_f.gi <- cbind(gb, as.matrix(gi.fadaptive)) %>%
+  rename(gstatf_adaptive = as.matrix.gi.fadaptive.)
+```
+
+#### Mapping Gi statistics
+
+In this section, we will visualize the locations of hot spot and cold spot areas of functional and non-functional waterpoints across Nigeria. The choropleth mapping functions of **tmap** package will be used to map the Gi values.
+
+The code chunk below shows the functions used to map the Gi values derived using adaptive distance weight matrix.
+
+```{r}
+# Gi mapping for Functional water points
+Gimap_func <- tm_shape(gb_f.gi) + 
+           tm_fill(col = "gstatf_adaptive", 
+           style = "pretty", 
+           palette="-RdBu", 
+           title = "local Gi") + 
+           tm_borders(alpha = 0.5)+
+           tm_layout(main.title = "Gi Map (Functional)",
+                     main.title.fontface = "bold",
+                     main.title.position = "center",
+                     legend.height = 1, 
+                     legend.width = 1,
+                     legend.text.size = 1,
+                     legend.title.size = 1,)+
+           tm_compass(type="8star",
+                      position=c("right", "top"))
+```
+
+```{r}
+Gimap_nonfunc <- tm_shape(gb_nf.gi) + 
+            tm_fill(col = "gstatnf_adaptive", 
+                    style = "pretty", 
+                    palette="-RdBu", 
+                    title = "local Gi") + 
+            tm_borders(alpha = 0.5)+
+            tm_layout(main.title = "Gi Map (Non-Functional)",
+                      main.title.fontface = "bold",
+                      main.title.position = "center",
+                      legend.height = 1, 
+                      legend.width = 1,
+                      legend.text.size = 1,
+                      legend.title.size = 1,)+
+            tm_compass(type="8star",
+                       position=c("right", "top"))
+```
+
+The code chunk below plots the Gi maps side by side for better comparison using *tmap_arrange()* function.
+
+```{r}
+tmap_arrange(Gimap_func, Gimap_nonfunc,
+             asp=1,ncol=2)
+```
+
+## Conclusion
+
+We were able to gain a lot of insights through investigating the spatial distribution of water points in Nigeria using Global and Local measures of Autocorrelationregarding the water points distribution. The LISA analysis helped us identify statistically significant hotspots of water points more rigorously than with that of choropleths maps.
+
+## **References**
+
+https://r4gdsa.netlify.app/chap02.html#data-classification-methods-of-tmap
+
+https://r4gdsa.netlify.app/chap04.html#hot-spot-and-cold-spot-area-analysis
+
+[Exploring and visualizing household electricity consumption patterns in Singapore: A geospatial analytics approach](https://ink.library.smu.edu.sg/sis_research/4376/)
