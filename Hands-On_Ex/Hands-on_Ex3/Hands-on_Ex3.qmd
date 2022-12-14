@@ -42,7 +42,7 @@ We need to first load the necessary R packages. For the purpose of this in-class
 ```{r}
 pacman::p_load(rgdal, spdep, tmap, sf, ClustGeo, 
                ggpubr, cluster, factoextra, NbClust,
-               heatmaply, corrplot, psych, tidyverse)
+               heatmaply, corrplot, psych, tidyverse, GGally)
 ```
 
 Note: With **tidyverse**, we do not have to install **readr**, **ggplot2** and **dplyr** packages separately. In fact, **tidyverse** also installs other very useful R packages such as **tidyr**.
@@ -905,8 +905,8 @@ The boxplot above reveals that the Cluster 3 displays the highest mean Radio Own
 Past studies shown that parallel coordinate plot can be used to reveal clustering variables by cluster very effectively. In the code chunk below, *ggparcoord()* function of GGally package.
 
 ```{r}
-install.packages("GGally")
-library(GGally)
+#install.packages("GGally")
+#library(GGally)
 ggparcoord(data = shan_sf_ngeo_cluster, 
            columns = c(17:21), 
            scale = "globalminmax",
