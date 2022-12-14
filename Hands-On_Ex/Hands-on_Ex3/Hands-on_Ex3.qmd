@@ -15,7 +15,7 @@ In this hands-on exercise, we will gain hands-on experience on how to delineate 
 
 In this exercise, we are interested to delineate Shan State, Myanmar into homogeneous regions by using multiple Information and Communication technology (ICT) measures, namely,: Radio, TV, Land-line, mobile phone, Computer and Internet at home.
 
-## Getting Started 
+## Getting Started
 
 We need to first load the necessary R packages. For the purpose of this in-class exercise, there are two packages that will be used. They are:
 
@@ -74,7 +74,7 @@ The imported township boundary object is called *shan_sf*. It is saved in a **si
 shan_sf
 ```
 
-The simple feature data.frame is conformed to Hardy Wickham\'s tidy framework. Therefor, we can also *glimpse()* to reveal the data type of it\'s fields.
+The simple feature data.frame is conformed to Hardy Wickham's tidy framework. Therefor, we can also *glimpse()* to reveal the data type of it's fields.
 
 ```{r}
 glimpse(shan_sf)
@@ -592,7 +592,7 @@ groups <- as.factor(cutree(hclust_ward, k=6))
 
 The code chunk below performs 3 steps:
 
-1.   the groups list object is converted into a matrix i.e., *as.matrix(groups)*;
+1.  the groups list object is converted into a matrix i.e., *as.matrix(groups)*;
 
 2.  *cbind()* is used to append the groups matrix onto shan_sf to produce an output simple feature object called `shan_sf_cluster`.
 
@@ -828,7 +828,7 @@ The code chunk below plots the 6 nclusters on a categorical area shaded map by u
 
 The code chunk below performs 3 steps:
 
-1.   the groups list object is converted into a factor i.e., *as.factor(groups)*;
+1.  the groups list object is converted into a factor i.e., *as.factor(groups)*;
 
 2.  *cbind()* is used to append the groups matrix onto shan_sf to produce an output simple feature object called `shan_sf_ngeo_cluster`.
 
